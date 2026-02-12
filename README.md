@@ -1,5 +1,14 @@
 # 紧急通知：已经有人反馈封号了 低调使用，被举报必封
 
+## WebUI 可视化管理
+
+<img width="1918" height="888" alt="image" src="https://github.com/user-attachments/assets/a3d115aa-5bd4-4f12-b43e-411e781204f4" />
+<img width="1919" height="897" alt="image" src="https://github.com/user-attachments/assets/f0acb66a-0b7f-47b4-9cb9-48ee3015752d" />
+<img width="1889" height="779" alt="QQ20260212-121430" src="https://github.com/user-attachments/assets/2350e643-65e3-4c39-9e14-971a5ef3c01d" />
+<img width="500" height="266" alt="QQ20260212-122439" src="https://github.com/user-attachments/assets/c4072776-d8cc-4340-a49c-c6cd7daea75e" />
+
+
+
 ## 一些提醒：某些人嘴脸不要那么难看，直接拿我原版的程序去倒卖
 
 # QQ经典农场 挂机脚本
@@ -47,7 +56,7 @@ git clone https://github.com/linguo2625469/qq-farm-bot.git
 cd qq-farm-bot
 npm install
 ```
-
+--------------------------------------------------------------------------------------------------------------
 ## 使用
 
 ### 获取登录 Code
