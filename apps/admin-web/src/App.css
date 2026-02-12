@@ -346,8 +346,59 @@
   border: 1px solid rgba(255, 255, 255, 0.10);
   border-radius: 16px;
   overflow: auto;
-  max-height: 72vh;
+  max-height: clamp(320px, 56vh, 520px);
   background: rgb(var(--glass-rgb) / var(--glass-alpha2));
+}
+
+.titleWithIcon {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.miniIcon {
+  width: 14px;
+  height: 14px;
+  opacity: 0.9;
+  flex: 0 0 auto;
+}
+
+.valWithDelta {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 8px;
+  justify-content: flex-end;
+}
+
+.deltaPop {
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.2px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  color: rgba(255, 255, 255, 0.92);
+  background: radial-gradient(circle at 20% 30%, rgba(111, 255, 184, 0.55), rgba(122, 162, 255, 0.22) 55%, rgba(255, 255, 255, 0.06));
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.22);
+  animation: deltaPop 900ms ease both;
+}
+
+@keyframes deltaPop {
+  0% {
+    opacity: 0;
+    transform: translateY(6px) scale(0.92);
+    filter: saturate(1);
+  }
+  22% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    filter: saturate(1.1);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-10px) scale(1.04);
+    filter: saturate(1.15);
+  }
 }
 
 .compactCard .cardHeader {
@@ -372,6 +423,44 @@
 
 .dash .stats {
   gap: 10px;
+}
+
+.settingsPage.grid {
+  gap: 10px;
+}
+
+.settingsPage .formGrid {
+  gap: 10px;
+}
+
+.settingsPage .field {
+  gap: 6px;
+}
+
+.settingsPage .fieldInput {
+  padding: 9px 10px;
+  border-radius: 12px;
+  font-size: 13px;
+}
+
+.settingsPage .fieldHint {
+  font-size: 11px;
+  line-height: 1.35;
+}
+
+.settingsPage .btn-sm {
+  padding: 7px 9px;
+  border-radius: 11px;
+  font-size: 12px;
+}
+
+.settingsPage .stats {
+  gap: 10px;
+}
+
+.settingsPage .stat {
+  padding: 10px 10px 9px 10px;
+  border-radius: 14px;
 }
 
 .boardGrid {
@@ -491,7 +580,7 @@
 }
 
 .statsCompact {
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(5, minmax(0, 1fr));
 }
 
 .gridSpan2 {

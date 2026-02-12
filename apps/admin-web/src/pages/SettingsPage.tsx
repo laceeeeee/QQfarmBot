@@ -201,7 +201,7 @@ export function SettingsPage(): React.JSX.Element {
   }, [refreshWallpaperCount]);
 
   return (
-    <div className="grid">
+    <div className="grid settingsPage">
       <div className="gridSpan2">
         <GlassCard
           title="运行配置"
@@ -216,6 +216,7 @@ export function SettingsPage(): React.JSX.Element {
               </Button>
             </div>
           }
+          className="compactCard"
         >
           <div className="formGrid">
             <label className="field">
@@ -289,7 +290,7 @@ export function SettingsPage(): React.JSX.Element {
       </div>
 
       <div className="gridSpan2">
-        <GlassCard title="壁纸" subtitle="在线壁纸由服务端代理拉取；本地壁纸存储在浏览器缓存">
+        <GlassCard title="壁纸" subtitle="在线壁纸由服务端代理拉取；本地壁纸存储在浏览器缓存" className="compactCard">
           <div className="formGrid">
             <label className="field">
               <div className="fieldLabel">模式</div>
@@ -327,7 +328,7 @@ export function SettingsPage(): React.JSX.Element {
       </div>
 
       <div className="gridSpan2">
-        <GlassCard title="邮件通知（SMTP）" subtitle="当检测到 WS 400 错误时停止 bot 并邮件提醒">
+        <GlassCard title="邮件通知（SMTP）" subtitle="当检测到 WS 400 错误时停止 bot 并邮件提醒" className="compactCard">
           <div className="formGrid">
             <label className="field">
               <div className="fieldLabel">启用</div>
@@ -387,7 +388,7 @@ export function SettingsPage(): React.JSX.Element {
       </div>
 
       <div className="gridSpan2">
-        <GlassCard title="当前状态" subtitle="来自实时快照（WebSocket 推送）">
+        <GlassCard title="当前状态" subtitle="来自实时快照（WebSocket 推送）" className="compactCard">
           <div className="stats">
             <div className="stat">
               <div className="statK">Bot</div>

@@ -1,10 +1,8 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type React from "react";
-import ReactECharts from "echarts-for-react";
 import { Link, NavLink } from "react-router-dom";
 import { useAuth } from "../lib/auth";
 import { useData } from "../lib/data";
-import { formatBytes } from "../lib/format";
 import { apiFetch, type ApiError } from "../lib/api";
 import { Button } from "../ui/Button";
 
@@ -13,20 +11,10 @@ type ShellProps = {
   children: React.ReactNode;
 };
 
-/**
- * 将 ISO 时间戳格式化为仅包含时间的字符串，用于侧边栏日志紧凑展示。
- */
-function formatTimeOnly(iso: string): string {
-  const d = new Date(iso);
-  if (Number.isNaN(d.getTime())) return iso;
-  return d.toLocaleTimeString(undefined, { hour12: false });
-}
-
 export function Shell(props: ShellProps): React.JSX.Element {
   const auth = useAuth();
   const data = useData();
   const { snapshot } = data;
-  const history = data.snapshotHistory;
   const [wallpaperUrl, setWallpaperUrl] = useState<string | null>(null);
   const [wallpaperCacheCount, setWallpaperCacheCount] = useState<number | null>(null);
   const [wallpaperMode, setWallpaperMode] = useState<"online" | "local" | "off">(() => {
@@ -40,39 +28,16 @@ export function Shell(props: ShellProps): React.JSX.Element {
   const [recoveryLoading, setRecoveryLoading] = useState(false);
   const [recoveryError, setRecoveryError] = useState<string | null>(null);
 
-  const sidebarLogs = useMemo(() => data.logs.slice(-10).reverse(), [data.logs]);
-  const logListRef = useRef<HTMLDivElement | null>(null);
-  const lastTopLogIdRef = useRef<string | null>(null);
-  const [flashLogId, setFlashLogId] = useState<string | null>(null);
   const [shutdownLoading, setShutdownLoading] = useState(false);
   const [shutdownError, setShutdownError] = useState<string | null>(null);
 
   useEffect(() => {
-    const topId = sidebarLogs[0]?.id ?? null;
-    if (!topId) return;
-    if (topId === lastTopLogIdRef.current) return;
-    lastTopLogIdRef.current = topId;
-
-    const el = logListRef.current;
-    if (el) {
-      const isNearTop = el.scrollTop <= 12;
-      if (isNearTop) el.scrollTo({ top: 0, behavior: "smooth" });
-    }
-
-    setFlashLogId(topId);
-    const t = window.setTimeout(() => setFlashLogId(null), 750);
-    return () => window.clearTimeout(t);
-  }, [sidebarLogs]);
-
-  useEffect(() => {
     if (fatalWs400.active) return;
     if (!snapshot?.bot?.startedAt) return;
-    const top = sidebarLogs[0];
+    const top = data.logs[data.logs.length - 1];
     if (!top) return;
-    if (top.message.includes("Unexpected server response: 400")) {
-      setFatalWs400({ active: true, msg: top.message });
-    }
-  }, [fatalWs400.active, sidebarLogs, snapshot?.bot?.startedAt]);
+    if (top.message.includes("Unexpected server response: 400")) setFatalWs400({ active: true, msg: top.message });
+  }, [data.logs, fatalWs400.active, snapshot?.bot?.startedAt]);
 
   useEffect(() => {
     let cancelled = false;
@@ -198,37 +163,6 @@ export function Shell(props: ShellProps): React.JSX.Element {
     }
   }
 
-  const memOption = useMemo(() => {
-    const x = history.map((p) => formatTimeOnly(p.ts));
-    return {
-      backgroundColor: "transparent",
-      grid: { left: 8, right: 8, top: 10, bottom: 4, containLabel: false },
-      tooltip: { trigger: "axis", confine: true },
-      xAxis: { type: "category", data: x, show: false },
-      yAxis: { type: "value", show: false },
-      series: [
-        {
-          name: "Heap Used",
-          type: "line",
-          smooth: true,
-          showSymbol: false,
-          data: history.map((p) => p.heapUsed),
-          lineStyle: { width: 2, color: "#6fffb8" },
-          areaStyle: { color: "rgba(111,255,184,.10)" },
-        },
-        {
-          name: "RSS",
-          type: "line",
-          smooth: true,
-          showSymbol: false,
-          data: history.map((p) => p.rss),
-          lineStyle: { width: 2, color: "#7aa2ff" },
-          areaStyle: { color: "rgba(122,162,255,.08)" },
-        },
-      ],
-    };
-  }, [history]);
-
   return (
     <div className="appRoot" style={wallpaperUrl ? { backgroundImage: `url(${wallpaperUrl})` } : undefined}>
       <div className="shell">
@@ -274,43 +208,6 @@ export function Shell(props: ShellProps): React.JSX.Element {
             </div>
             <div className="muted" style={{ paddingTop: 6 }}>
               {wallpaperMode === "off" ? "已关闭" : wallpaperMode === "local" ? "本地壁纸" : "在线壁纸"}
-            </div>
-          </div>
-
-          <div className="navPanel">
-            <div className="navPanelHead">
-              <div className="navPanelTitle">内存趋势</div>
-              <div className="navPanelSub">{snapshot ? formatBytes(snapshot.stats.memoryRss) : "—"}</div>
-            </div>
-            <div className="navPanelChart">
-              <ReactECharts option={memOption} style={{ height: 120, width: "100%" }} notMerge={true} lazyUpdate={true} />
-            </div>
-          </div>
-
-          <div className="navPanel">
-            <div className="navPanelHead">
-              <div className="navPanelTitle">最新日志</div>
-              <div className="navPanelSub">最近 10 条</div>
-            </div>
-            <div className="navLogList" ref={logListRef}>
-              {sidebarLogs.length ? (
-                sidebarLogs.map((x) => (
-                  <div
-                    key={x.id}
-                    className={[
-                      "navLogRow",
-                      `navLog-${x.level}`,
-                      flashLogId === x.id ? "navLogFlash" : "",
-                    ].join(" ")}
-                  >
-                    <div className="navLogTs mono">{formatTimeOnly(x.ts)}</div>
-                    <div className="navLogScope mono">{x.scope}</div>
-                    <div className="navLogMsg">{x.message}</div>
-                  </div>
-                ))
-              ) : (
-                <div className="navLogEmpty muted">暂无日志</div>
-              )}
             </div>
           </div>
 

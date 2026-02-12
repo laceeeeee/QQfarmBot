@@ -78,6 +78,7 @@ export function DataProvider(props: { children: React.ReactNode }): React.JSX.El
   const [snapshot, setSnapshot] = useState<Snapshot | null>(null);
   const [snapshotHistory, setSnapshotHistory] = useState<SnapshotHistoryPoint[]>([]);
   const [logs, setLogs] = useState<LogEntry[]>([]);
+  const logWindow = 50;
 
   /**
    * 同步更新最新快照，并维护内存趋势用的历史窗口。
@@ -94,21 +95,28 @@ export function DataProvider(props: { children: React.ReactNode }): React.JSX.El
     });
   }, []);
 
+  const setLogsWithLimit = useCallback(
+    (list: LogEntry[]): void => {
+      setLogs(list.slice(-logWindow));
+    },
+    [logWindow]
+  );
+
   const value = useMemo<DataContextValue>(
     () => ({
       snapshot,
       setSnapshot: setSnapshotWithHistory,
       snapshotHistory,
       logs,
-      setLogs,
+      setLogs: setLogsWithLimit,
       appendLog: (entry) =>
         setLogs((prev) => {
-          const next = prev.length > 2000 ? prev.slice(prev.length - 1500) : prev.slice();
-          next.push(entry);
-          return next;
+          const keep = prev.length >= logWindow ? prev.slice(prev.length - (logWindow - 1)) : prev.slice();
+          keep.push(entry);
+          return keep;
         }),
     }),
-    [logs, snapshot, snapshotHistory, setSnapshotWithHistory]
+    [logWindow, logs, setLogsWithLimit, snapshot, snapshotHistory, setSnapshotWithHistory]
   );
 
   return <DataContext.Provider value={value}>{props.children}</DataContext.Provider>;
