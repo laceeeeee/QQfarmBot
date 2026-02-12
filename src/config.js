@@ -4,12 +4,22 @@
 
 const CONFIG = {
     serverUrl: 'wss://gate-obt.nqf.qq.com/prod/ws',
-    clientVersion: '1.6.0.11_20251224',
+    clientVersion: '1.6.0.14_20251224',
     platform: 'qq',              // 平台: qq 或 wx (可通过 --wx 切换为微信)
     os: 'iOS',
     heartbeatInterval: 25000,    // 心跳间隔 25秒
     farmCheckInterval: 1000,    // 自己农场巡查完成后等待间隔 (可通过 --interval 修改, 最低1秒)
     friendCheckInterval: 10000,   // 好友巡查完成后等待间隔 (可通过 --friend-interval 修改, 最低1秒)
+    autoHarvest: true,
+    autoFertilize: true,
+    autoWater: true,
+    autoWeed: true,
+    autoBug: true,
+    autoPlant: true,
+    autoTask: true,
+    autoSell: true,
+    forceLowestLevelCrop: false,  // 开启后固定种最低等级作物（通常是白萝卜），跳过经验效率分析
+    fixedSeedId: undefined,       // 指定种植种子 ID（优先级高于经验效率推荐）
 };
 
 // 运行期提示文案（做了简单编码，避免明文散落）

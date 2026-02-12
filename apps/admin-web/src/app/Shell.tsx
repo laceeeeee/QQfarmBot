@@ -15,12 +15,10 @@ export function Shell(props: ShellProps): React.JSX.Element {
   const auth = useAuth();
   const data = useData();
   const { snapshot } = data;
+  const serverWallpaperMode = snapshot?.config?.ui?.wallpaper?.mode;
   const [wallpaperUrl, setWallpaperUrl] = useState<string | null>(null);
   const [wallpaperCacheCount, setWallpaperCacheCount] = useState<number | null>(null);
-  const [wallpaperMode, setWallpaperMode] = useState<"online" | "local" | "off">(() => {
-    const raw = localStorage.getItem("ui:wallpaperMode");
-    return raw === "local" || raw === "off" ? raw : "online";
-  });
+  const [wallpaperMode, setWallpaperMode] = useState<"local" | "off">("local");
   const [glassAlpha, setGlassAlpha] = useState(0.5);
   const wallpaperObjectUrlRef = useRef<string | null>(null);
   const [fatalWs400, setFatalWs400] = useState<{ active: boolean; msg: string }>({ active: false, msg: "" });
@@ -46,37 +44,22 @@ export function Shell(props: ShellProps): React.JSX.Element {
       try {
         if (!("caches" in window)) return;
         const cache = await caches.open("farm-wallpaper-v1");
-        let keys = await cache.keys();
+        const keys = await cache.keys();
         setWallpaperCacheCount(keys.length);
 
-        const onlineKeys = keys.filter((k) => k.url.includes("/__wallpaper/online/"));
         const localKeys = keys.filter((k) => k.url.includes("/__wallpaper/local/"));
+        const effectiveMode: "local" | "off" = wallpaperMode === "local" && localKeys.length === 0 ? "off" : wallpaperMode;
 
-        if (wallpaperMode === "off") {
+        if (effectiveMode === "off") {
           if (wallpaperObjectUrlRef.current) URL.revokeObjectURL(wallpaperObjectUrlRef.current);
           wallpaperObjectUrlRef.current = null;
           setWallpaperUrl(null);
           return;
         }
 
-        if (wallpaperMode === "online" && onlineKeys.length < 15) {
-          const res = await fetch(`/api/ui/wallpaper/random?t=${Date.now()}`, { cache: "no-store" });
-          if (res.ok) {
-            const blob = await res.blob();
-            const key = new Request(`/__wallpaper/online/${Date.now()}`, { method: "GET" });
-            await cache.put(
-              key,
-              new Response(blob, { headers: { "content-type": res.headers.get("content-type") ?? "image/jpeg" } })
-            );
-            keys = await cache.keys();
-            setWallpaperCacheCount(keys.length);
-          }
-        }
-
-        const pickFrom = wallpaperMode === "local" ? localKeys : onlineKeys;
-        const fallbackPickFrom = pickFrom.length ? pickFrom : keys;
-        if (!fallbackPickFrom.length) return;
-        const pick = fallbackPickFrom[Math.floor(Math.random() * fallbackPickFrom.length)];
+        const pickFrom = localKeys.length ? localKeys : keys;
+        if (!pickFrom.length) return;
+        const pick = pickFrom[Math.floor(Math.random() * pickFrom.length)];
         const cached = await cache.match(pick);
         if (!cached) return;
         const blob = await cached.blob();
@@ -102,22 +85,12 @@ export function Shell(props: ShellProps): React.JSX.Element {
   }, [wallpaperMode]);
 
   useEffect(() => {
-    const onStorage = (evt: StorageEvent) => {
-      if (evt.key !== "ui:wallpaperMode") return;
-      const raw = localStorage.getItem("ui:wallpaperMode");
-      setWallpaperMode(raw === "local" || raw === "off" ? raw : "online");
-    };
-    const onCustom = () => {
-      const raw = localStorage.getItem("ui:wallpaperMode");
-      setWallpaperMode(raw === "local" || raw === "off" ? raw : "online");
-    };
-    window.addEventListener("storage", onStorage);
-    window.addEventListener("ui:wallpaper", onCustom as EventListener);
-    return () => {
-      window.removeEventListener("storage", onStorage);
-      window.removeEventListener("ui:wallpaper", onCustom as EventListener);
-    };
-  }, []);
+    if (serverWallpaperMode === "local" || serverWallpaperMode === "off") {
+      setWallpaperMode(serverWallpaperMode);
+    } else {
+      setWallpaperMode("local");
+    }
+  }, [serverWallpaperMode]);
 
   async function restartBot(): Promise<void> {
     setRecoveryError(null);
@@ -180,8 +153,17 @@ export function Shell(props: ShellProps): React.JSX.Element {
             <NavLink to="/" end className={({ isActive }) => (isActive ? "navLink active" : "navLink")}>
               数据 & 日志
             </NavLink>
-            <NavLink to="/settings" className={({ isActive }) => (isActive ? "navLink active" : "navLink")}>
-              配置
+            <NavLink to="/lands" className={({ isActive }) => (isActive ? "navLink active" : "navLink")}>
+              土地
+            </NavLink>
+            <NavLink to="/seeds" className={({ isActive }) => (isActive ? "navLink active" : "navLink")}>
+              种子清单
+            </NavLink>
+            <NavLink to="/wallpaper" className={({ isActive }) => (isActive ? "navLink active" : "navLink")}>
+              壁纸
+            </NavLink>
+            <NavLink to="/notifications" className={({ isActive }) => (isActive ? "navLink active" : "navLink")}>
+              通知
             </NavLink>
           </nav>
 
@@ -207,7 +189,7 @@ export function Shell(props: ShellProps): React.JSX.Element {
               <div className="navPanelSub">{wallpaperCacheCount == null ? "—" : `${wallpaperCacheCount} 张`}</div>
             </div>
             <div className="muted" style={{ paddingTop: 6 }}>
-              {wallpaperMode === "off" ? "已关闭" : wallpaperMode === "local" ? "本地壁纸" : "在线壁纸"}
+              {wallpaperMode === "off" ? "已关闭" : "本地壁纸"}
             </div>
           </div>
 
@@ -228,8 +210,16 @@ export function Shell(props: ShellProps): React.JSX.Element {
               <div className="topbarH">{props.title ?? "控制台"}</div>
               <div className="topbarHint">
                 <span className="chip">
+                  <span className={snapshot?.bot?.connected ? "dot dot-accent" : "dot dot-danger"} />
+                  <span>{snapshot?.bot?.connected ? "已连接" : "未连接"}</span>
+                </span>
+                <span className="chip">
                   <span className="dot dot-blue" />
-                  <span>WebSocket 实时推送</span>
+                  <span>WS {snapshot?.stats.wsClients ?? 0}</span>
+                </span>
+                <span className="chip">
+                  <span className={snapshot?.bot?.running ? "dot dot-warn" : "dot dot-danger"} />
+                  <span>{snapshot?.bot?.running ? "RUNNING" : "STOPPED"}</span>
                 </span>
                 <Button variant="danger" size="sm" onClick={shutdownApp} disabled={shutdownLoading}>
                   {shutdownLoading ? "退出中..." : "退出程序"}

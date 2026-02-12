@@ -322,18 +322,6 @@ export function DashboardPage(): React.JSX.Element {
           </button>
         </div>
         <div className="dashBarRight">
-          <span className="chip">
-            <span className={snapshot?.bot?.connected ? "dot dot-accent" : "dot dot-danger"} />
-            <span>{snapshot?.bot?.connected ? "已连接" : "未连接"}</span>
-          </span>
-          <span className="chip">
-            <span className="dot dot-blue" />
-            <span>WS {snapshot?.stats.wsClients ?? 0}</span>
-          </span>
-          <span className="chip">
-            <span className={snapshot?.bot?.running ? "dot dot-warn" : "dot dot-danger"} />
-            <span>{snapshot?.bot?.running ? "RUNNING" : "STOPPED"}</span>
-          </span>
           <div className="dashBotInline">
             <input
               className="fieldInput dashBotInput"
@@ -406,7 +394,10 @@ export function DashboardPage(): React.JSX.Element {
                   <button key={x.id} className={["logRow", `log-${x.level}`].join(" ")} onClick={() => setLogSelectedId(x.id)}>
                     <div className="logTs">{formatDateTime(x.ts)}</div>
                     <div className="logScope mono">{x.scope}</div>
-                    <div className="logMsg">{x.message}</div>
+                    <div className="logMsg">
+                      <span className="logMsgText">{x.message}</span>
+                      {(x.repeat ?? 1) > 1 ? <span className="logRepeat">×{x.repeat}</span> : null}
+                    </div>
                   </button>
                 ))}
                 <div ref={logBottomRef} />

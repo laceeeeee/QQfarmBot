@@ -4,6 +4,26 @@ export type RuntimeConfig = {
   friendIntervalSecMin: number;
   friendIntervalSecMax: number;
   platform: "qq" | "wx";
+  automation?: {
+    autoHarvest: boolean;
+    autoFertilize: boolean;
+    autoWater: boolean;
+    autoWeed: boolean;
+    autoBug: boolean;
+    autoPlant: boolean;
+    autoTask: boolean;
+    autoSell: boolean;
+  };
+  farming?: {
+    forceLowestLevelCrop: boolean;
+    fixedSeedId?: number;
+  };
+  ui?: {
+    wallpaper?: {
+      sync: boolean;
+      mode: "local" | "off";
+    };
+  };
   smtp?: {
     enabled: boolean;
     host: string;
@@ -65,5 +85,21 @@ export type CoreSnapshot = {
       expProgress?: { current: number; needed: number };
     };
     farmSummary?: Record<string, unknown> | null;
+    lands?: {
+      updatedAt: number;
+      total: number;
+      unlocked: number;
+      items: Array<{
+        id: number;
+        unlocked: boolean;
+        cropName: string | null;
+        phase: number | null;
+        phaseName: string | null;
+        timeLeftSec: number | null;
+        needWater: boolean;
+        needWeed: boolean;
+        needBug: boolean;
+      }>;
+    } | null;
   };
 };

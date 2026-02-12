@@ -4,6 +4,13 @@ import react from "@vitejs/plugin-react";
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [react() as unknown as PluginOption],
+  build: {
+    rollupOptions: {
+      output: {
+        assetFileNames: "assets/[hash][extname]",
+      },
+    },
+  },
   server: {
     proxy: {
       "/api": "http://localhost:8787",

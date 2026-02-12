@@ -40,83 +40,12 @@ export function SettingsPage(): React.JSX.Element {
   const [friendIntervalSecMin, setFriendIntervalSecMin] = useState(1);
   const [friendIntervalSecMax, setFriendIntervalSecMax] = useState(1);
 
-  const [smtpEnabled, setSmtpEnabled] = useState(false);
-  const [smtpHost, setSmtpHost] = useState("");
-  const [smtpPort, setSmtpPort] = useState(587);
-  const [smtpSecure, setSmtpSecure] = useState(false);
-  const [smtpUser, setSmtpUser] = useState("");
-  const [smtpPass, setSmtpPass] = useState("");
-  const [smtpPassSet, setSmtpPassSet] = useState(false);
-  const [smtpFrom, setSmtpFrom] = useState("");
-  const [smtpTo, setSmtpTo] = useState("");
-
-  const [wallpaperMode, setWallpaperMode] = useState<"online" | "local" | "off">(() => {
-    const raw = localStorage.getItem("ui:wallpaperMode");
-    return raw === "local" || raw === "off" ? raw : "online";
-  });
-  const [wallpaperCount, setWallpaperCount] = useState<number | null>(null);
-
-  const refreshWallpaperCount = useCallback(async (): Promise<void> => {
-    try {
-      if (!("caches" in window)) return;
-      const cache = await caches.open("farm-wallpaper-v1");
-      const keys = await cache.keys();
-      setWallpaperCount(keys.length);
-    } catch {
-      return;
-    }
-  }, []);
-
-  const onPickLocalWallpaper = useCallback(async (files: FileList | null): Promise<void> => {
-    try {
-      if (!files?.length) return;
-      if (!("caches" in window)) return;
-      const cache = await caches.open("farm-wallpaper-v1");
-      const now = Date.now();
-      const list = Array.from(files).slice(0, 20);
-      for (let i = 0; i < list.length; i++) {
-        const f = list[i];
-        if (!f.type.startsWith("image/")) continue;
-        const key = new Request(`/__wallpaper/local/${now}-${i}`, { method: "GET" });
-        await cache.put(key, new Response(f, { headers: { "content-type": f.type || "image/jpeg" } }));
-      }
-      await refreshWallpaperCount();
-      localStorage.setItem("ui:wallpaperMode", "local");
-      setWallpaperMode("local");
-      window.dispatchEvent(new Event("ui:wallpaper"));
-    } catch {
-      return;
-    }
-  }, [refreshWallpaperCount]);
-
-  const onChangeWallpaperMode = useCallback((mode: "online" | "local" | "off"): void => {
-    localStorage.setItem("ui:wallpaperMode", mode);
-    setWallpaperMode(mode);
-    window.dispatchEvent(new Event("ui:wallpaper"));
-  }, []);
-
-  const clearWallpaperCache = useCallback(async (): Promise<void> => {
-    try {
-      if (!("caches" in window)) return;
-      await caches.delete("farm-wallpaper-v1");
-      setWallpaperCount(0);
-      window.dispatchEvent(new Event("ui:wallpaper"));
-    } catch {
-      return;
-    }
-  }, []);
-
   const canSave = useMemo(() => {
     if (saving) return false;
     if (selfIntervalSecMin < 1 || selfIntervalSecMax < 1) return false;
     if (friendIntervalSecMin < 1 || friendIntervalSecMax < 1) return false;
     if (selfIntervalSecMin > selfIntervalSecMax) return false;
     if (friendIntervalSecMin > friendIntervalSecMax) return false;
-    if (!smtpEnabled) return true;
-    if (!smtpHost.trim()) return false;
-    if (!smtpPort) return false;
-    if (!smtpFrom.trim()) return false;
-    if (!smtpTo.trim()) return false;
     return true;
   }, [
     friendIntervalSecMax,
@@ -124,11 +53,6 @@ export function SettingsPage(): React.JSX.Element {
     saving,
     selfIntervalSecMax,
     selfIntervalSecMin,
-    smtpEnabled,
-    smtpFrom,
-    smtpHost,
-    smtpPort,
-    smtpTo,
   ]);
 
   const load = useCallback(async (): Promise<void> => {
@@ -142,16 +66,6 @@ export function SettingsPage(): React.JSX.Element {
       setSelfIntervalSecMax(res.config.selfIntervalSecMax);
       setFriendIntervalSecMin(res.config.friendIntervalSecMin);
       setFriendIntervalSecMax(res.config.friendIntervalSecMax);
-      const smtp = res.config.smtp;
-      setSmtpEnabled(Boolean(smtp?.enabled));
-      setSmtpHost(smtp?.host ?? "");
-      setSmtpPort(smtp?.port ?? 587);
-      setSmtpSecure(Boolean(smtp?.secure));
-      setSmtpUser(smtp?.user ?? "");
-      setSmtpPass("");
-      setSmtpPassSet(Boolean(smtp?.passSet));
-      setSmtpFrom(smtp?.from ?? "");
-      setSmtpTo(smtp?.to ?? "");
     } catch (e: unknown) {
       const err = e as ApiError;
       setError(err.code ?? "加载失败");
@@ -165,24 +79,14 @@ export function SettingsPage(): React.JSX.Element {
     setOk(null);
     setSaving(true);
     try {
-      const body: Omit<Config, "smtp"> & { smtp: Omit<NonNullable<Config["smtp"]>, "passSet"> & { pass?: string } } = {
+      const body: Omit<Config, "smtp"> = {
         platform,
         selfIntervalSecMin,
         selfIntervalSecMax,
         friendIntervalSecMin,
         friendIntervalSecMax,
-        smtp: {
-          enabled: smtpEnabled,
-          host: smtpHost,
-          port: smtpPort,
-          secure: smtpSecure,
-          user: smtpUser,
-          pass: smtpPass,
-          from: smtpFrom,
-          to: smtpTo,
-        },
       };
-      await apiFetch("/api/config", { method: "PUT", token: auth.token, body });
+      await apiFetch<ConfigReply>("/api/config", { method: "PUT", token: auth.token, body });
       setOk("已保存");
     } catch (e: unknown) {
       const err = e as ApiError;
@@ -195,10 +99,6 @@ export function SettingsPage(): React.JSX.Element {
   useEffect(() => {
     void load();
   }, [load]);
-
-  useEffect(() => {
-    void refreshWallpaperCount();
-  }, [refreshWallpaperCount]);
 
   return (
     <div className="grid settingsPage">
@@ -286,104 +186,6 @@ export function SettingsPage(): React.JSX.Element {
 
           {error ? <div className="formError">{error}</div> : null}
           {ok ? <div className="formOk">{ok}</div> : null}
-        </GlassCard>
-      </div>
-
-      <div className="gridSpan2">
-        <GlassCard title="壁纸" subtitle="在线壁纸由服务端代理拉取；本地壁纸存储在浏览器缓存" className="compactCard">
-          <div className="formGrid">
-            <label className="field">
-              <div className="fieldLabel">模式</div>
-              <select className="fieldInput select" value={wallpaperMode} onChange={(e) => onChangeWallpaperMode(e.target.value as "online" | "local" | "off")}>
-                <option value="online">在线</option>
-                <option value="local">本地</option>
-                <option value="off">关闭</option>
-              </select>
-              <div className="fieldHint">云端部署建议使用“在线”（避免跨域/混合内容问题）。</div>
-            </label>
-
-            <label className="field">
-              <div className="fieldLabel">缓存数量</div>
-              <div className="fieldInput" style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                <span>{wallpaperCount == null ? "—" : `${wallpaperCount} 张`}</span>
-                <div className="row">
-                  <Button size="sm" variant="ghost" onClick={refreshWallpaperCount}>
-                    刷新
-                  </Button>
-                  <Button size="sm" variant="danger" onClick={clearWallpaperCache}>
-                    清空
-                  </Button>
-                </div>
-              </div>
-              <div className="fieldHint">本地/在线壁纸都会计入缓存数量。</div>
-            </label>
-
-            <label className="field">
-              <div className="fieldLabel">导入本地壁纸</div>
-              <input className="fieldInput" type="file" accept="image/*" multiple onChange={(e) => void onPickLocalWallpaper(e.target.files)} />
-              <div className="fieldHint">选择后自动切换到“本地”模式（最多一次导入 20 张）。</div>
-            </label>
-          </div>
-        </GlassCard>
-      </div>
-
-      <div className="gridSpan2">
-        <GlassCard title="邮件通知（SMTP）" subtitle="当检测到 WS 400 错误时停止 bot 并邮件提醒" className="compactCard">
-          <div className="formGrid">
-            <label className="field">
-              <div className="fieldLabel">启用</div>
-              <select className="fieldInput select" value={smtpEnabled ? "on" : "off"} onChange={(e) => setSmtpEnabled(e.target.value === "on")}>
-                <option value="off">关闭</option>
-                <option value="on">开启</option>
-              </select>
-              <div className="fieldHint">关闭后不会发邮件，但仍可保留配置。</div>
-            </label>
-
-            <label className="field">
-              <div className="fieldLabel">服务器 Host</div>
-              <input className="fieldInput" value={smtpHost} onChange={(e) => setSmtpHost(e.target.value)} placeholder="smtp.example.com" />
-            </label>
-
-            <label className="field">
-              <div className="fieldLabel">端口</div>
-              <input className="fieldInput" type="number" min={0} max={65535} value={smtpPort} onChange={(e) => setSmtpPort(Number(e.target.value))} />
-            </label>
-
-            <label className="field">
-              <div className="fieldLabel">TLS</div>
-              <select className="fieldInput select" value={smtpSecure ? "secure" : "starttls"} onChange={(e) => setSmtpSecure(e.target.value === "secure")}>
-                <option value="starttls">STARTTLS</option>
-                <option value="secure">SSL/TLS</option>
-              </select>
-              <div className="fieldHint">一般 465 选 SSL/TLS；587 选 STARTTLS。</div>
-            </label>
-
-            <label className="field">
-              <div className="fieldLabel">用户名</div>
-              <input className="fieldInput" value={smtpUser} onChange={(e) => setSmtpUser(e.target.value)} placeholder="user@example.com" />
-            </label>
-
-            <label className="field">
-              <div className="fieldLabel">密码</div>
-              <input
-                className="fieldInput"
-                type="password"
-                value={smtpPass}
-                onChange={(e) => setSmtpPass(e.target.value)}
-                placeholder={smtpPassSet ? "已设置（留空则不改）" : "请输入 SMTP 密码"}
-              />
-            </label>
-
-            <label className="field">
-              <div className="fieldLabel">From</div>
-              <input className="fieldInput" value={smtpFrom} onChange={(e) => setSmtpFrom(e.target.value)} placeholder="Farm Console <noreply@example.com>" />
-            </label>
-
-            <label className="field">
-              <div className="fieldLabel">To</div>
-              <input className="fieldInput" value={smtpTo} onChange={(e) => setSmtpTo(e.target.value)} placeholder="a@example.com, b@example.com" />
-            </label>
-          </div>
         </GlassCard>
       </div>
 

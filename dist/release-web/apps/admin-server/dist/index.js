@@ -92,6 +92,12 @@ export async function startAdminServer(input) {
     });
     configStore.onAfterSet = (saved) => {
         configCache = saved;
+        try {
+            bot.applyRuntimeConfig(saved);
+        }
+        catch {
+            return;
+        }
     };
     return { shutdown, url, host, port };
 }

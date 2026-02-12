@@ -7,6 +7,7 @@ export type LogEntry = {
   level: "debug" | "info" | "warn" | "error";
   scope: string;
   message: string;
+  repeat?: number;
   details?: Record<string, unknown>;
 };
 
@@ -18,6 +19,26 @@ export type Snapshot = {
     friendIntervalSecMin: number;
     friendIntervalSecMax: number;
     platform: "qq" | "wx";
+    automation?: {
+      autoHarvest: boolean;
+      autoFertilize: boolean;
+      autoWater: boolean;
+      autoWeed: boolean;
+      autoBug: boolean;
+      autoPlant: boolean;
+      autoTask: boolean;
+      autoSell: boolean;
+    };
+    farming?: {
+      forceLowestLevelCrop: boolean;
+      fixedSeedId?: number;
+    };
+    ui?: {
+      wallpaper?: {
+        sync: boolean;
+        mode: "local" | "off";
+      };
+    };
     smtp?: {
       enabled: boolean;
       host: string;
@@ -65,6 +86,22 @@ export type Snapshot = {
       expProgress?: { current: number; needed: number };
     };
     farmSummary?: Record<string, unknown> | null;
+    lands?: {
+      updatedAt: number;
+      total: number;
+      unlocked: number;
+      items: Array<{
+        id: number;
+        unlocked: boolean;
+        cropName: string | null;
+        phase: number | null;
+        phaseName: string | null;
+        timeLeftSec: number | null;
+        needWater: boolean;
+        needWeed: boolean;
+        needBug: boolean;
+      }>;
+    } | null;
   };
 };
 
@@ -80,6 +117,39 @@ type DataContextValue = {
 };
 
 const DataContext = createContext<DataContextValue | null>(null);
+
+function parseTsMs(ts: string): number {
+  const t = Date.parse(ts);
+  return Number.isFinite(t) ? t : NaN;
+}
+
+function canMergeLog(prev: LogEntry, next: LogEntry): boolean {
+  if (prev.level !== next.level) return false;
+  if (prev.scope !== next.scope) return false;
+  if (prev.message !== next.message) return false;
+  const a = parseTsMs(prev.ts);
+  const b = parseTsMs(next.ts);
+  if (!Number.isFinite(a) || !Number.isFinite(b)) return prev.ts === next.ts;
+  return Math.abs(b - a) <= 2000;
+}
+
+function mergeLogEntry(prev: LogEntry, next: LogEntry): LogEntry {
+  const repeat = (prev.repeat ?? 1) + 1;
+  return { ...prev, ts: next.ts, details: next.details ?? prev.details, repeat };
+}
+
+function compactLogs(list: LogEntry[]): LogEntry[] {
+  const out: LogEntry[] = [];
+  for (const entry of list) {
+    const last = out[out.length - 1];
+    if (last && canMergeLog(last, entry)) {
+      out[out.length - 1] = mergeLogEntry(last, entry);
+    } else {
+      out.push(entry);
+    }
+  }
+  return out;
+}
 
 export function DataProvider(props: { children: React.ReactNode }): React.JSX.Element {
   const [snapshot, setSnapshot] = useState<Snapshot | null>(null);
@@ -104,7 +174,7 @@ export function DataProvider(props: { children: React.ReactNode }): React.JSX.El
 
   const setLogsWithLimit = useCallback(
     (list: LogEntry[]): void => {
-      setLogs(list.slice(-logWindow));
+      setLogs(compactLogs(list).slice(-logWindow));
     },
     [logWindow]
   );
@@ -118,6 +188,12 @@ export function DataProvider(props: { children: React.ReactNode }): React.JSX.El
       setLogs: setLogsWithLimit,
       appendLog: (entry) =>
         setLogs((prev) => {
+          const last = prev[prev.length - 1];
+          if (last && canMergeLog(last, entry)) {
+            const keep = prev.slice();
+            keep[keep.length - 1] = mergeLogEntry(last, entry);
+            return keep;
+          }
           const keep = prev.length >= logWindow ? prev.slice(prev.length - (logWindow - 1)) : prev.slice();
           keep.push(entry);
           return keep;

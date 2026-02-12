@@ -5,6 +5,7 @@
 
 const { types } = require('./proto');
 const { sendMsgAsync } = require('./network');
+const { CONFIG } = require('./config');
 const { toLong, toNum, log, logWarn, emitRuntimeHint } = require('./utils');
 const { getFruitName } = require('./gameConfig');
 let seedShopData = { rows: [] };
@@ -82,6 +83,7 @@ function getBagItems(bagReply) {
 }
 
 async function sellAllFruits() {
+    if (!CONFIG.autoSell) return;
     try {
         const bagReply = await getBag();
         const items = getBagItems(bagReply);
@@ -152,6 +154,7 @@ async function debugSellFruits() {
 }
 
 function startSellLoop(interval = 60000) {
+    if (!CONFIG.autoSell) return;
     if (sellTimer) return;
     sellInterval = interval;
     setTimeout(() => {

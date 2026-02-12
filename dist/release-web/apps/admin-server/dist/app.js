@@ -17,6 +17,81 @@ export function createApp(services) {
         credentials: false,
     }));
     app.use(express.json({ limit: "1mb" }));
+    let seedListCache = null;
+    /**
+     * 从 gameConfig/Plant.json 构建“种子清单”对照表，并按文件 mtime 做缓存刷新。
+     */
+    function getSeedList() {
+        const filePath = path.join(services.projectRoot, "gameConfig", "Plant.json");
+        const stat = fs.statSync(filePath);
+        const cached = seedListCache;
+        if (cached && cached.mtimeMs === stat.mtimeMs)
+            return cached;
+        const raw = fs.readFileSync(filePath, "utf-8");
+        const parsed = JSON.parse(raw);
+        if (!Array.isArray(parsed))
+            throw httpError(500, "PLANT_CONFIG_INVALID");
+        /**
+         * 解析 grow_phases 字符串：例如 "种子:2400;发芽:2400;...;成熟:0;"
+         */
+        function parseGrowPhases(input) {
+            if (typeof input !== "string" || !input.trim())
+                return [];
+            return input
+                .split(";")
+                .map((x) => x.trim())
+                .filter(Boolean)
+                .map((pair) => {
+                const idx = pair.indexOf(":");
+                if (idx <= 0)
+                    return null;
+                const name = pair.slice(0, idx).trim();
+                const sec = Number(pair.slice(idx + 1));
+                if (!name)
+                    return null;
+                if (!Number.isFinite(sec) || sec < 0)
+                    return null;
+                return { name, sec: Math.floor(sec) };
+            })
+                .filter((x) => Boolean(x));
+        }
+        const items = parsed
+            .map((row) => {
+            const plantId = Number(row.id);
+            const seedId = Number(row.seed_id);
+            const name = typeof row.name === "string" ? row.name : "";
+            const landLevelNeed = Number(row.land_level_need);
+            const seasons = Number(row.seasons);
+            const exp = Number(row.exp);
+            const fruit = row.fruit;
+            const fruitId = fruit && fruit.id != null ? Number(fruit.id) : null;
+            const fruitCount = fruit && fruit.count != null ? Number(fruit.count) : null;
+            const growPhases = parseGrowPhases(row.grow_phases);
+            const totalGrowSec = growPhases.length > 0 ? growPhases.reduce((sum, x) => sum + (Number.isFinite(x.sec) ? x.sec : 0), 0) : null;
+            if (!Number.isFinite(plantId) || plantId <= 0)
+                return null;
+            if (!Number.isFinite(seedId) || seedId <= 0)
+                return null;
+            if (!name)
+                return null;
+            return {
+                plantId,
+                seedId,
+                name,
+                landLevelNeed: Number.isFinite(landLevelNeed) ? landLevelNeed : 0,
+                seasons: Number.isFinite(seasons) ? seasons : 0,
+                exp: Number.isFinite(exp) ? exp : 0,
+                fruitId: fruitId != null && Number.isFinite(fruitId) ? fruitId : null,
+                fruitCount: fruitCount != null && Number.isFinite(fruitCount) ? fruitCount : null,
+                totalGrowSec,
+                growPhases,
+            };
+        })
+            .filter((x) => Boolean(x))
+            .sort((a, b) => a.seedId - b.seedId || a.plantId - b.plantId);
+        seedListCache = { mtimeMs: stat.mtimeMs, updatedAtMs: Date.now(), items };
+        return seedListCache;
+    }
     app.get("/healthz", (_req, res) => {
         res.json({ ok: true });
     });
@@ -71,6 +146,93 @@ export function createApp(services) {
         const config = await services.configStore.set(req.body);
         res.json({ config });
     }));
+    app.get("/api/seeds", requireAuth(services.env.JWT_SECRET), asyncHandler(async (req, res) => {
+        const query = z
+            .object({
+            q: z.string().optional(),
+            page: z.coerce.number().int().min(1).optional(),
+            pageSize: z.coerce.number().int().min(1).max(50000).optional(),
+            sortKey: z
+                .enum(["name", "seedId", "plantId", "landLevelNeed", "seasons", "exp", "fruitId", "totalGrowSec"])
+                .optional(),
+            sortDir: z.enum(["asc", "desc"]).optional(),
+        })
+            .parse(req.query);
+        /**
+         * 按指定字段对列表排序（支持升降序）。
+         */
+        function sortItems(list, sortKey, sortDir) {
+            if (!sortKey)
+                return list;
+            const dir = sortDir === "desc" ? -1 : 1;
+            const copy = list.slice();
+            copy.sort((a, b) => {
+                if (sortKey === "name")
+                    return dir * a.name.localeCompare(b.name, "zh-Hans-CN");
+                if (sortKey === "seedId")
+                    return dir * (a.seedId - b.seedId);
+                if (sortKey === "plantId")
+                    return dir * (a.plantId - b.plantId);
+                if (sortKey === "landLevelNeed")
+                    return dir * (a.landLevelNeed - b.landLevelNeed);
+                if (sortKey === "seasons")
+                    return dir * (a.seasons - b.seasons);
+                if (sortKey === "exp")
+                    return dir * (a.exp - b.exp);
+                if (sortKey === "fruitId") {
+                    const av = a.fruitId ?? (sortDir === "asc" ? Number.POSITIVE_INFINITY : Number.NEGATIVE_INFINITY);
+                    const bv = b.fruitId ?? (sortDir === "asc" ? Number.POSITIVE_INFINITY : Number.NEGATIVE_INFINITY);
+                    return dir * (av - bv);
+                }
+                if (sortKey === "totalGrowSec") {
+                    const av = a.totalGrowSec ?? (sortDir === "asc" ? Number.POSITIVE_INFINITY : Number.NEGATIVE_INFINITY);
+                    const bv = b.totalGrowSec ?? (sortDir === "asc" ? Number.POSITIVE_INFINITY : Number.NEGATIVE_INFINITY);
+                    return dir * (av - bv);
+                }
+                return 0;
+            });
+            return copy;
+        }
+        const cache = getSeedList();
+        const needle = (query.q ?? "").trim();
+        const numNeedle = needle && /^\d+$/.test(needle) ? Number(needle) : null;
+        const filtered = needle
+            ? cache.items.filter((x) => {
+                if (numNeedle != null && Number.isFinite(numNeedle)) {
+                    if (x.seedId === numNeedle)
+                        return true;
+                    if (x.plantId === numNeedle)
+                        return true;
+                    if (x.fruitId === numNeedle)
+                        return true;
+                }
+                return x.name.includes(needle);
+            })
+            : cache.items;
+        const sorted = sortItems(filtered, query.sortKey, query.sortDir ?? "asc");
+        const total = sorted.length;
+        const page = query.page ?? 1;
+        const pageSize = query.pageSize;
+        const items = pageSize ? sorted.slice((page - 1) * pageSize, (page - 1) * pageSize + pageSize) : sorted;
+        res.json({ items, total, page, pageSize: pageSize ?? items.length, updatedAtMs: cache.updatedAtMs });
+    }));
+    app.get("/api/seeds/lookup", requireAuth(services.env.JWT_SECRET), asyncHandler(async (req, res) => {
+        const query = z
+            .object({
+            seedId: z.coerce.number().int().min(1),
+        })
+            .parse(req.query);
+        const cache = getSeedList();
+        const hit = cache.items.find((x) => x.seedId === query.seedId) ??
+            cache.items.find((x) => x.plantId === query.seedId) ??
+            cache.items.find((x) => x.fruitId === query.seedId) ??
+            null;
+        if (!hit)
+            throw httpError(404, "NOT_FOUND");
+        res.json({
+            seed: { seedId: hit.seedId, plantId: hit.plantId, name: hit.name, updatedAtMs: cache.updatedAtMs },
+        });
+    }));
     app.get("/api/bot/status", requireAuth(services.env.JWT_SECRET), asyncHandler(async (_req, res) => {
         res.json({ status: services.bot.getStatus() });
     }));
@@ -123,27 +285,6 @@ export function createApp(services) {
             throw httpError(404, "NOT_FOUND");
         res.json({ entry });
     }));
-    app.get("/api/ui/wallpaper/random", asyncHandler(async (_req, res) => {
-        const controller = new AbortController();
-        const t = setTimeout(() => controller.abort(), 8000);
-        try {
-            const upstream = await fetch(`https://box.fiime.cn/random/srandom.php?t=${Date.now()}`, {
-                signal: controller.signal,
-            });
-            if (!upstream.ok)
-                throw httpError(502, "WALLPAPER_FETCH_FAILED");
-            const buf = Buffer.from(await upstream.arrayBuffer());
-            res.setHeader("content-type", upstream.headers.get("content-type") ?? "image/jpeg");
-            res.setHeader("cache-control", "no-store");
-            res.status(200).send(buf);
-        }
-        catch {
-            throw httpError(502, "WALLPAPER_FETCH_FAILED");
-        }
-        finally {
-            clearTimeout(t);
-        }
-    }));
     const webDistDir = process.env.WEB_DIST_DIR?.trim()
         ? path.resolve(process.env.WEB_DIST_DIR.trim())
         : path.join(services.projectRoot, "apps", "admin-web", "dist");
@@ -182,6 +323,7 @@ export function buildSnapshot(services) {
             startedAt: bot.startedAt,
             user: bot.user,
             farmSummary: bot.farmSummary ?? null,
+            lands: bot.lands ?? null,
         },
     };
     return snapshot;

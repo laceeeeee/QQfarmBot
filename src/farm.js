@@ -8,6 +8,7 @@ const { types } = require('./proto');
 const { sendMsgAsync, getUserState, networkEvents } = require('./network');
 const { toLong, toNum, getServerTimeSec, toTimeSec, log, logWarn, sleep, pickIntervalMs } = require('./utils');
 const { getPlantNameBySeedId, getPlantName, getPlantExp, formatGrowTime, getPlantGrowTime } = require('./gameConfig');
+const { getPlantingRecommendation } = require('../tools/calc-exp-yield');
 
 // ============ 内部状态 ============
 let isCheckingFarm = false;
@@ -165,7 +166,14 @@ async function plantSeeds(seedId, landIds) {
     return successCount;
 }
 
-async function findBestSeed() {
+/**
+ * 从商店可购买种子中选择“最优种子”。
+ * - forceLowestLevelCrop=true 时固定选择最低等级作物
+ * - 否则尝试按经验效率推荐挑选；失败则走兜底策略
+ * @param {number | null | undefined} landsCount
+ * @returns {Promise<null | { goods: any; goodsId: number; seedId: number; price: number; requiredLevel: number }>}
+ */
+async function findBestSeed(landsCount) {
     const SEED_SHOP_ID = 2;
     const shopReply = await getShopInfo(SEED_SHOP_ID);
     if (!shopReply.goods_list || shopReply.goods_list.length === 0) {
@@ -210,14 +218,47 @@ async function findBestSeed() {
         return null;
     }
 
-    // 按等级要求排序
-    // 取最高等级种子: available.sort((a, b) => b.requiredLevel - a.requiredLevel);
-    // 暂时改为取最低等级种子 (白萝卜)
-    available.sort((a, b) => a.requiredLevel - b.requiredLevel);
+    const fixedSeedId = toNum(CONFIG.fixedSeedId);
+    if (fixedSeedId > 0) {
+        const hit = available.find(x => x.seedId === fixedSeedId);
+        if (hit) return hit;
+        logWarn('商店', `指定种子不可购买或未解锁: seedId=${fixedSeedId}，将改用自动推荐`);
+    }
+
+    if (CONFIG.forceLowestLevelCrop) {
+        available.sort((a, b) => a.requiredLevel - b.requiredLevel || a.price - b.price);
+        return available[0];
+    }
+
+    try {
+        log('商店', `等级: ${state.level}，土地数量: ${landsCount}`);
+
+        const rec = getPlantingRecommendation(state.level, landsCount == null ? 18 : landsCount, { top: 50 });
+        const rankedSeedIds = rec.candidatesNormalFert.map(x => x.seedId);
+        for (const seedId of rankedSeedIds) {
+            const hit = available.find(x => x.seedId === seedId);
+            if (hit) return hit;
+        }
+    } catch (e) {
+        logWarn('商店', `经验效率推荐失败，使用兜底策略: ${e.message}`);
+    }
+
+    if (state.level && state.level <= 28) {
+        available.sort((a, b) => a.requiredLevel - b.requiredLevel);
+    } else {
+        available.sort((a, b) => b.requiredLevel - a.requiredLevel);
+    }
     return available[0];
 }
 
-async function autoPlantEmptyLands(deadLandIds, emptyLandIds) {
+/**
+ * 自动补种空地：铲除枯死/残留 -> 购买 -> 种植 -> 施肥。
+ * @param {number[]} deadLandIds
+ * @param {number[]} emptyLandIds
+ * @param {number | null | undefined} unlockedLandCount
+ */
+async function autoPlantEmptyLands(deadLandIds, emptyLandIds, unlockedLandCount) {
+    if (!CONFIG.autoPlant) return;
     let landsToPlant = [...emptyLandIds];
     const state = getUserState();
 
@@ -239,7 +280,7 @@ async function autoPlantEmptyLands(deadLandIds, emptyLandIds) {
     // 2. 查询种子商店
     let bestSeed;
     try {
-        bestSeed = await findBestSeed();
+        bestSeed = await findBestSeed(unlockedLandCount);
     } catch (e) {
         logWarn('商店', `查询失败: ${e.message}`);
         return;
@@ -297,7 +338,7 @@ async function autoPlantEmptyLands(deadLandIds, emptyLandIds) {
     }
 
     // 5. 施肥（逐块拖动，间隔50ms）
-    if (plantedLands.length > 0) {
+    if (CONFIG.autoFertilize && plantedLands.length > 0) {
         const fertilized = await fertilize(plantedLands);
         if (fertilized > 0) {
             log('施肥', `已为 ${fertilized}/${plantedLands.length} 块地施肥`);
@@ -490,6 +531,7 @@ async function checkFarm() {
 
         const lands = landsReply.lands;
         const status = analyzeLands(lands);
+        const unlockedLandCount = lands.filter(land => land && land.unlocked).length;
         isFirstFarmCheck = false;
         lastFarmSummary = {
             updatedAt: Date.now(),
@@ -521,13 +563,13 @@ async function checkFarm() {
 
         // 一键操作：除草、除虫、浇水可以并行执行（游戏中都是一键完成）
         const batchOps = [];
-        if (status.needWeed.length > 0) {
+        if (CONFIG.autoWeed && status.needWeed.length > 0) {
             batchOps.push(weedOut(status.needWeed).then(() => actions.push(`除草${status.needWeed.length}`)).catch(e => logWarn('除草', e.message)));
         }
-        if (status.needBug.length > 0) {
+        if (CONFIG.autoBug && status.needBug.length > 0) {
             batchOps.push(insecticide(status.needBug).then(() => actions.push(`除虫${status.needBug.length}`)).catch(e => logWarn('除虫', e.message)));
         }
-        if (status.needWater.length > 0) {
+        if (CONFIG.autoWater && status.needWater.length > 0) {
             batchOps.push(waterLand(status.needWater).then(() => actions.push(`浇水${status.needWater.length}`)).catch(e => logWarn('浇水', e.message)));
         }
         if (batchOps.length > 0) {
@@ -536,7 +578,7 @@ async function checkFarm() {
 
         // 收获（一键操作）
         let harvestedLandIds = [];
-        if (status.harvestable.length > 0) {
+        if (CONFIG.autoHarvest && status.harvestable.length > 0) {
             try {
                 await harvest(status.harvestable);
                 const detail = formatNameCounts((status.harvestableInfo || []).map(x => x && x.name).filter(Boolean));
@@ -548,9 +590,9 @@ async function checkFarm() {
         // 铲除 + 种植 + 施肥（需要顺序执行）
         const allDeadLands = [...status.dead, ...harvestedLandIds];
         const allEmptyLands = [...status.empty];
-        if (allDeadLands.length > 0 || allEmptyLands.length > 0) {
+        if (CONFIG.autoPlant && (allDeadLands.length > 0 || allEmptyLands.length > 0)) {
             try {
-                await autoPlantEmptyLands(allDeadLands, allEmptyLands);
+                await autoPlantEmptyLands(allDeadLands, allEmptyLands, unlockedLandCount);
                 actions.push(`种植${allDeadLands.length + allEmptyLands.length}`);
             } catch (e) { logWarn('种植', e.message); }
         }

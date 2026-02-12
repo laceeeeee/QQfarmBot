@@ -64,7 +64,10 @@ export function LogsPage(): React.JSX.Element {
               <button key={x.id} className={["logRow", `log-${x.level}`].join(" ")} onClick={() => setSelected(x)}>
                 <div className="logTs">{formatDateTime(x.ts)}</div>
                 <div className="logScope mono">{x.scope}</div>
-                <div className="logMsg">{x.message}</div>
+                <div className="logMsg">
+                  <span className="logMsgText">{x.message}</span>
+                  {(x.repeat ?? 1) > 1 ? <span className="logRepeat">×{x.repeat}</span> : null}
+                </div>
               </button>
             ))}
             <div ref={bottomRef} />

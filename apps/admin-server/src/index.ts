@@ -117,6 +117,11 @@ export async function startAdminServer(input?: {
 
   (configStore as ConfigStoreWithHook).onAfterSet = (saved) => {
     configCache = saved as typeof configCache;
+    try {
+      bot.applyRuntimeConfig(saved as typeof configCache);
+    } catch {
+      return;
+    }
   };
 
   return { shutdown, url, host, port };

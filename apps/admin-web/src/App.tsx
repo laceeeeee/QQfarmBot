@@ -8,7 +8,10 @@ import { useData, type LogEntry, type Snapshot } from "./lib/data";
 import { Shell } from "./app/Shell";
 import { LoginPage } from "./pages/LoginPage";
 import { DashboardPage } from "./pages/DashboardPage";
-import { SettingsPage } from "./pages/SettingsPage";
+import { NotificationsPage } from "./pages/NotificationsPage";
+import { LandsPage } from "./pages/LandsPage";
+import { WallpaperPage } from "./pages/WallpaperPage";
+import { SeedsPage } from "./pages/SeedsPage";
 
 export default function App(): React.JSX.Element {
   const auth = useAuth();
@@ -40,8 +43,46 @@ export default function App(): React.JSX.Element {
         path="/settings"
         element={
           <Authed>
-            <Shell title="配置管理">
-              <SettingsPage />
+            <Navigate to="/lands" replace />
+          </Authed>
+        }
+      />
+      <Route
+        path="/notifications"
+        element={
+          <Authed>
+            <Shell title="通知">
+              <NotificationsPage />
+            </Shell>
+          </Authed>
+        }
+      />
+      <Route
+        path="/lands"
+        element={
+          <Authed>
+            <Shell title="土地">
+              <LandsPage />
+            </Shell>
+          </Authed>
+        }
+      />
+      <Route
+        path="/wallpaper"
+        element={
+          <Authed>
+            <Shell title="壁纸">
+              <WallpaperPage />
+            </Shell>
+          </Authed>
+        }
+      />
+      <Route
+        path="/seeds"
+        element={
+          <Authed>
+            <Shell title="种子清单">
+              <SeedsPage />
             </Shell>
           </Authed>
         }

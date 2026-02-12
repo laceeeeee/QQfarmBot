@@ -9,6 +9,26 @@ type StoredRuntimeConfig = {
   friendIntervalSecMin: number;
   friendIntervalSecMax: number;
   platform: "qq" | "wx";
+  automation?: {
+    autoHarvest: boolean;
+    autoFertilize: boolean;
+    autoWater: boolean;
+    autoWeed: boolean;
+    autoBug: boolean;
+    autoPlant: boolean;
+    autoTask: boolean;
+    autoSell: boolean;
+  };
+  farming?: {
+    forceLowestLevelCrop: boolean;
+    fixedSeedId?: number;
+  };
+  ui?: {
+    wallpaper?: {
+      sync: boolean;
+      mode: "online" | "local" | "off";
+    };
+  };
   smtp?: {
     enabled: boolean;
     host: string;
@@ -33,6 +53,34 @@ const StoredRuntimeConfigSchema = z.object({
   friendIntervalSecMin: z.number().int().min(1).max(3600),
   friendIntervalSecMax: z.number().int().min(1).max(3600),
   platform: z.enum(["qq", "wx"]),
+  automation: z
+    .object({
+      autoHarvest: z.boolean(),
+      autoFertilize: z.boolean(),
+      autoWater: z.boolean(),
+      autoWeed: z.boolean(),
+      autoBug: z.boolean(),
+      autoPlant: z.boolean(),
+      autoTask: z.boolean(),
+      autoSell: z.boolean(),
+    })
+    .optional(),
+  farming: z
+    .object({
+      forceLowestLevelCrop: z.boolean(),
+      fixedSeedId: z.number().int().min(1).max(1_000_000_000).optional(),
+    })
+    .optional(),
+  ui: z
+    .object({
+      wallpaper: z
+        .object({
+          sync: z.boolean(),
+          mode: z.enum(["online", "local", "off"]),
+        })
+        .optional(),
+    })
+    .optional(),
   smtp: z
     .object({
       enabled: z.boolean(),
@@ -47,7 +95,18 @@ const StoredRuntimeConfigSchema = z.object({
     .optional(),
 });
 
-const ApiRuntimeConfigSchema = StoredRuntimeConfigSchema.superRefine((val, ctx) => {
+const ApiRuntimeConfigSchema = StoredRuntimeConfigSchema.extend({
+  ui: z
+    .object({
+      wallpaper: z
+        .object({
+          sync: z.boolean(),
+          mode: z.enum(["local", "off"]),
+        })
+        .optional(),
+    })
+    .optional(),
+}).superRefine((val, ctx) => {
   if (val.selfIntervalSecMin > val.selfIntervalSecMax) {
     ctx.addIssue({ code: "custom", message: "selfIntervalSecMin must be <= selfIntervalSecMax", path: ["selfIntervalSecMin"] });
   }
@@ -90,12 +149,32 @@ export class ConfigStore {
   }
 
   private toPublic(stored: StoredRuntimeConfig): RuntimeConfig {
+    const ui = {
+      wallpaper: {
+        sync: true,
+        mode: stored.ui?.wallpaper?.mode === "off" ? ("off" as const) : ("local" as const),
+      },
+    };
+    const automation = stored.automation ?? {
+      autoHarvest: true,
+      autoFertilize: true,
+      autoWater: true,
+      autoWeed: true,
+      autoBug: true,
+      autoPlant: true,
+      autoTask: true,
+      autoSell: true,
+    };
+    const farming = stored.farming ?? { forceLowestLevelCrop: false };
     return {
       platform: stored.platform,
       selfIntervalSecMin: stored.selfIntervalSecMin,
       selfIntervalSecMax: stored.selfIntervalSecMax,
       friendIntervalSecMin: stored.friendIntervalSecMin,
       friendIntervalSecMax: stored.friendIntervalSecMax,
+      automation,
+      farming,
+      ui,
       smtp: stored.smtp
         ? {
             enabled: stored.smtp.enabled,
@@ -121,6 +200,18 @@ export class ConfigStore {
       selfIntervalSecMax: 10,
       friendIntervalSecMin: 1,
       friendIntervalSecMax: 1,
+      automation: {
+        autoHarvest: true,
+        autoFertilize: true,
+        autoWater: true,
+        autoWeed: true,
+        autoBug: true,
+        autoPlant: true,
+        autoTask: true,
+        autoSell: true,
+      },
+      farming: { forceLowestLevelCrop: false },
+      ui: { wallpaper: { sync: true, mode: "local" } },
     };
     const raw = await readJsonFile<unknown>(this.filePath, fallback);
     const stored = this.toStored(raw);
@@ -138,6 +229,18 @@ export class ConfigStore {
       selfIntervalSecMax: 10,
       friendIntervalSecMin: 1,
       friendIntervalSecMax: 1,
+      automation: {
+        autoHarvest: true,
+        autoFertilize: true,
+        autoWater: true,
+        autoWeed: true,
+        autoBug: true,
+        autoPlant: true,
+        autoTask: true,
+        autoSell: true,
+      },
+      farming: { forceLowestLevelCrop: false },
+      ui: { wallpaper: { sync: true, mode: "local" } },
     };
     const raw = await readJsonFile<unknown>(this.filePath, fallback);
     const stored = this.toStored(raw);
@@ -160,6 +263,23 @@ export class ConfigStore {
       selfIntervalSecMax: parsed.selfIntervalSecMax,
       friendIntervalSecMin: parsed.friendIntervalSecMin,
       friendIntervalSecMax: parsed.friendIntervalSecMax,
+      automation: parsed.automation ?? current.automation,
+      farming: parsed.farming
+        ? {
+            forceLowestLevelCrop: parsed.farming.forceLowestLevelCrop,
+            fixedSeedId: parsed.farming.fixedSeedId,
+          }
+        : current.farming,
+      ui: parsed.ui
+        ? {
+            wallpaper: parsed.ui.wallpaper
+              ? {
+                  sync: true,
+                  mode: parsed.ui.wallpaper.mode,
+                }
+              : current.ui?.wallpaper,
+          }
+        : current.ui,
       smtp: parsed.smtp
         ? {
             enabled: parsed.smtp.enabled,

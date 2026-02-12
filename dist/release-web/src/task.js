@@ -4,6 +4,7 @@
 
 const { types } = require('./proto');
 const { sendMsgAsync, networkEvents } = require('./network');
+const { CONFIG } = require('./config');
 const { toLong, toNum, log, logWarn, sleep } = require('./utils');
 
 // ============ 任务 API ============
@@ -82,6 +83,7 @@ function getRewardSummary(items) {
  * 检查并领取所有可领取的任务奖励
  */
 async function checkAndClaimTasks() {
+    if (!CONFIG.autoTask) return;
     try {
         const reply = await getTaskInfo();
         if (!reply.task_info) return;
@@ -123,6 +125,7 @@ async function checkAndClaimTasks() {
  * 处理任务状态变化推送
  */
 function onTaskInfoNotify(taskInfo) {
+    if (!CONFIG.autoTask) return;
     if (!taskInfo) return;
 
     const allTasks = [
@@ -143,6 +146,7 @@ function onTaskInfoNotify(taskInfo) {
  * 从任务列表领取奖励
  */
 async function claimTasksFromList(claimable) {
+    if (!CONFIG.autoTask) return;
     for (const task of claimable) {
         try {
             const useShare = task.shareMultiple > 1;
@@ -163,6 +167,7 @@ async function claimTasksFromList(claimable) {
 // ============ 初始化 ============
 
 function initTaskSystem() {
+    if (!CONFIG.autoTask) return;
     // 监听任务状态变化推送
     networkEvents.on('taskInfoNotify', onTaskInfoNotify);
 
