@@ -18097,3 +18097,5 @@
 {"id":"37a1038b-02db-447c-af2a-5dc0e3e4b533","ts":"2026-02-12T06:06:08.843Z","level":"info","scope":"SERVER","message":"Listening on http://127.0.0.1:8787","details":{"ws":"ws://127.0.0.1:8787/ws"}}
 {"id":"edf8698e-e98d-4973-9d02-f401c85099dd","ts":"2026-02-12T06:14:44.976Z","level":"info","scope":"SERVER","message":"Admin server booting..."}
 {"id":"89cf3d96-b46f-4059-ac87-53e83be25848","ts":"2026-02-12T06:14:44.995Z","level":"info","scope":"SERVER","message":"Listening on http://127.0.0.1:8787","details":{"ws":"ws://127.0.0.1:8787/ws"}}
+{"id":"79911f8a-4a8f-4ee1-9fa2-30548ef27886","ts":"2026-02-12T07:07:08.090Z","level":"info","scope":"SERVER","message":"Admin server booting..."}
+{"id":"a0a7ca5e-1f3d-4de8-865c-af4bf6e94cbb","ts":"2026-02-12T07:07:08.111Z","level":"info","scope":"SERVER","message":"Listening on http://127.0.0.1:8787","details":{"ws":"ws://127.0.0.1:8787/ws"}}

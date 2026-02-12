@@ -56,7 +56,14 @@ export type CoreSnapshot = {
     connected: boolean;
     platform: "qq" | "wx";
     startedAt?: string;
-    user?: { gid: number; name: string; level: number; gold: number; exp: number };
+    user?: {
+      gid: number;
+      name: string;
+      level: number;
+      gold: number;
+      exp: number;
+      expProgress?: { current: number; needed: number };
+    };
     farmSummary?: Record<string, unknown> | null;
   };
 };

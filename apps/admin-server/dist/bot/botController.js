@@ -15,6 +15,7 @@ export class BotController {
     onWsClosed = null;
     userPollTimer = null;
     fatalWs400Triggered = false;
+    levelExpStarts = null;
     constructor(opts) {
         this.require = createRequire(import.meta.url);
         this.logBuffer = opts.logBuffer;
@@ -24,6 +25,75 @@ export class BotController {
     projectRoot;
     getStatus() {
         return { ...this.status };
+    }
+    getLevelExpStarts() {
+        if (this.levelExpStarts)
+            return this.levelExpStarts;
+        try {
+            const list = this.require(path.join(this.projectRoot, "gameConfig", "RoleLevel.json"));
+            if (!Array.isArray(list) || !list.length)
+                return null;
+            const maxLevel = list.reduce((m, x) => (typeof x?.level === "number" ? Math.max(m, x.level) : m), 0);
+            if (!Number.isFinite(maxLevel) || maxLevel <= 0)
+                return null;
+            const starts = new Array(maxLevel + 2).fill(NaN);
+            for (const item of list) {
+                if (!item || typeof item.level !== "number" || typeof item.exp !== "number")
+                    continue;
+                starts[item.level] = item.exp;
+            }
+            const hasAtLeastTwo = Number.isFinite(starts[1]) && Number.isFinite(starts[2]);
+            if (!hasAtLeastTwo)
+                return null;
+            this.levelExpStarts = starts;
+            return starts;
+        }
+        catch {
+            return null;
+        }
+    }
+    computeExpProgress(level, totalExp) {
+        const starts = this.getLevelExpStarts();
+        if (!starts)
+            return null;
+        const exp = Number(totalExp);
+        if (!Number.isFinite(exp) || exp < 0)
+            return null;
+        const maxLevel = starts.length - 2;
+        let lvl = Number(level);
+        if (!Number.isFinite(lvl) || lvl < 1)
+            lvl = 1;
+        lvl = Math.min(Math.floor(lvl), maxLevel);
+        const startAt = starts[lvl];
+        const nextAt = starts[lvl + 1];
+        const lvlLooksValid = Number.isFinite(startAt) && Number.isFinite(nextAt) && exp >= startAt && exp < nextAt;
+        let effective = lvl;
+        if (!lvlLooksValid) {
+            let lo = 1;
+            let hi = maxLevel;
+            while (lo <= hi) {
+                const mid = (lo + hi) >> 1;
+                const midAt = starts[mid];
+                if (!Number.isFinite(midAt)) {
+                    hi = mid - 1;
+                    continue;
+                }
+                if (exp >= midAt)
+                    lo = mid + 1;
+                else
+                    hi = mid - 1;
+            }
+            effective = Math.max(1, Math.min(hi, maxLevel));
+        }
+        const curStart = starts[effective];
+        const nxtStart = starts[effective + 1];
+        if (!Number.isFinite(curStart) || !Number.isFinite(nxtStart))
+            return null;
+        const needed = nxtStart - curStart;
+        const current = exp - curStart;
+        if (!Number.isFinite(needed) || !Number.isFinite(current) || needed <= 0)
+            return null;
+        return { current: Math.max(0, Math.min(needed, current)), needed };
     }
     async start(input) {
         await this.stop();
@@ -74,7 +144,11 @@ export class BotController {
         networkMod.connect(input.code, async () => {
             this.status.connected = true;
             const user = networkMod.getUserState();
-            this.status.user = { ...user };
+            const expProgress = this.computeExpProgress(user.level, user.exp);
+            this.status.user = {
+                ...user,
+                expProgress: expProgress ?? undefined,
+            };
             await this.logBuffer.append({
                 level: "info",
                 scope: "BOT",
@@ -89,7 +163,11 @@ export class BotController {
             let lastExp = Number(user.exp ?? 0);
             const poll = async () => {
                 const next = networkMod.getUserState();
-                this.status.user = { ...next };
+                const expProgress = this.computeExpProgress(next.level, next.exp);
+                this.status.user = {
+                    ...next,
+                    expProgress: expProgress ?? undefined,
+                };
                 const gold = Number(next.gold ?? 0);
                 const exp = Number(next.exp ?? 0);
                 const goldDelta = gold - lastGold;

@@ -1151,15 +1151,50 @@
 @media (max-width: 980px) {
   .shell {
     grid-template-columns: 1fr;
+    padding: 12px;
+    gap: 12px;
   }
   .nav {
     position: relative;
+    top: auto;
+    align-self: stretch;
     height: auto;
   }
   .grid {
     grid-template-columns: 1fr;
   }
+  .dashBar {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+  }
+  .dashBarTabs {
+    align-self: flex-start;
+    max-width: 100%;
+    overflow: auto;
+  }
+  .dashBarRight {
+    justify-content: flex-start;
+    flex-wrap: wrap;
+    justify-self: auto;
+  }
+  .dashBotInline {
+    width: 100%;
+    grid-template-columns: 1fr auto;
+  }
+  .dashLogTools {
+    grid-template-columns: 1fr;
+    align-items: stretch;
+  }
+  .seg {
+    max-width: 100%;
+    overflow: auto;
+  }
   .stats {
+    grid-template-columns: 1fr 1fr;
+  }
+  .stats.statsCompact {
     grid-template-columns: 1fr 1fr;
   }
   .formGrid {
@@ -1176,5 +1211,30 @@
   }
   .logRow {
     grid-template-columns: 140px 90px 1fr;
+  }
+}
+
+@media (max-width: 600px) {
+  .shell {
+    padding: 10px;
+  }
+  .navPanel {
+    margin: 0;
+  }
+  .dashBarRight {
+    gap: 8px;
+  }
+  .dashBotInline {
+    grid-template-columns: 1fr;
+  }
+  .dashBotInline .btn {
+    width: 100%;
+  }
+  .logRow {
+    grid-template-columns: 108px 76px 1fr;
+    gap: 8px;
+  }
+  .stats.statsCompact {
+    grid-template-columns: 1fr;
   }
 }

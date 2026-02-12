@@ -256,10 +256,12 @@ export function DashboardPage(): React.JSX.Element {
 
   const levelProgress = useMemo(() => {
     if (!user) return null;
-    const need = (user.level + 1) * 200 + 200;
-    const cur = user.exp;
+    const prog = user.expProgress;
+    if (!prog) return null;
+    const cur = Number(prog.current);
+    const need = Number(prog.needed);
     const left = need - cur;
-    if (!Number.isFinite(need) || !Number.isFinite(cur) || !Number.isFinite(left)) return null;
+    if (!Number.isFinite(cur) || !Number.isFinite(need) || !Number.isFinite(left) || need <= 0) return null;
     return { cur, need, left: Math.max(0, left) };
   }, [user]);
 
@@ -447,9 +449,11 @@ export function DashboardPage(): React.JSX.Element {
                 <div className="stat">
                   <div className="statK">距离升级</div>
                   <div className="statV">
-                    {levelProgress == null
+                    {!user
                       ? "—"
-                      : `还差 ${Math.max(0, Math.floor(levelProgress.left))} 点(${Math.floor(levelProgress.cur)}/${Math.floor(levelProgress.need)})`}
+                      : levelProgress == null
+                        ? `经验 ${formatGold(user.exp)}`
+                        : `还差 ${Math.max(0, Math.floor(levelProgress.left))} 点(${Math.floor(levelProgress.cur)}/${Math.floor(levelProgress.need)})`}
                   </div>
                 </div>
               </div>
