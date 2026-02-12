@@ -36,18 +36,6 @@ export function WallpaperPage(): React.JSX.Element {
 
   const [wallpaperMode, setWallpaperMode] = useState<"local" | "off">("local");
   const [wallpaperSaving, setWallpaperSaving] = useState(false);
-  const [wallpaperCount, setWallpaperCount] = useState<number | null>(null);
-
-  const refreshWallpaperCount = useCallback(async (): Promise<void> => {
-    try {
-      if (!("caches" in window)) return;
-      const cache = await caches.open("farm-wallpaper-v1");
-      const keys = await cache.keys();
-      setWallpaperCount(keys.filter((k) => k.url.includes("/__wallpaper/local/")).length);
-    } catch {
-      return;
-    }
-  }, []);
 
   const saveWallpaperConfig = useCallback(
     async (next: { mode: "local" | "off" }): Promise<void> => {
@@ -107,13 +95,13 @@ export function WallpaperPage(): React.JSX.Element {
           const key = new Request(`/__wallpaper/local/${now}-${i}`, { method: "GET" });
           await cache.put(key, new Response(f, { headers: { "content-type": f.type || "image/jpeg" } }));
         }
-        await refreshWallpaperCount();
-        void saveWallpaperConfig({ mode: "local" });
+        await saveWallpaperConfig({ mode: "local" });
+        window.dispatchEvent(new Event("ui:wallpaper"));
       } catch {
         return;
       }
     },
-    [refreshWallpaperCount, saveWallpaperConfig]
+    [saveWallpaperConfig]
   );
 
   const onChangeWallpaperMode = useCallback(
@@ -128,7 +116,6 @@ export function WallpaperPage(): React.JSX.Element {
     try {
       if (!("caches" in window)) return;
       await caches.delete("farm-wallpaper-v1");
-      setWallpaperCount(0);
       window.dispatchEvent(new Event("ui:wallpaper"));
     } catch {
       return;
@@ -164,8 +151,8 @@ export function WallpaperPage(): React.JSX.Element {
   }, [load]);
 
   useEffect(() => {
-    void refreshWallpaperCount();
-  }, [refreshWallpaperCount]);
+    return;
+  }, []);
 
   return (
     <div className="grid settingsPage">
@@ -177,6 +164,9 @@ export function WallpaperPage(): React.JSX.Element {
             <div className="row">
               <Button size="sm" variant="ghost" onClick={load} disabled={loading}>
                 {loading ? "刷新中..." : "刷新"}
+              </Button>
+              <Button size="sm" variant="danger" onClick={clearWallpaperCache} disabled={!canChange}>
+                清空本地壁纸
               </Button>
             </div>
           }
@@ -190,22 +180,6 @@ export function WallpaperPage(): React.JSX.Element {
                 <option value="off">关闭</option>
               </select>
               <div className="fieldHint">所有浏览器/设备保持一致（通过服务端配置同步）。</div>
-            </label>
-
-            <label className="field">
-              <div className="fieldLabel">缓存数量</div>
-              <div className="fieldInput" style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                <span>{wallpaperCount == null ? "—" : `${wallpaperCount} 张`}</span>
-                <div className="row">
-                  <Button size="sm" variant="ghost" onClick={refreshWallpaperCount}>
-                    刷新
-                  </Button>
-                  <Button size="sm" variant="danger" onClick={clearWallpaperCache}>
-                    清空
-                  </Button>
-                </div>
-              </div>
-              <div className="fieldHint">仅本地壁纸会计入缓存数量。</div>
             </label>
 
             <label className="field">

@@ -17,10 +17,10 @@ export function Shell(props: ShellProps): React.JSX.Element {
   const { snapshot } = data;
   const serverWallpaperMode = snapshot?.config?.ui?.wallpaper?.mode;
   const [wallpaperUrl, setWallpaperUrl] = useState<string | null>(null);
-  const [wallpaperCacheCount, setWallpaperCacheCount] = useState<number | null>(null);
   const [wallpaperMode, setWallpaperMode] = useState<"local" | "off">("local");
   const [glassAlpha, setGlassAlpha] = useState(0.5);
   const wallpaperObjectUrlRef = useRef<string | null>(null);
+  const [wallpaperReloadSeq, setWallpaperReloadSeq] = useState(0);
   const [fatalWs400, setFatalWs400] = useState<{ active: boolean; msg: string }>({ active: false, msg: "" });
   const [recoveryCode, setRecoveryCode] = useState("");
   const [recoveryLoading, setRecoveryLoading] = useState(false);
@@ -45,7 +45,6 @@ export function Shell(props: ShellProps): React.JSX.Element {
         if (!("caches" in window)) return;
         const cache = await caches.open("farm-wallpaper-v1");
         const keys = await cache.keys();
-        setWallpaperCacheCount(keys.length);
 
         const localKeys = keys.filter((k) => k.url.includes("/__wallpaper/local/"));
         const effectiveMode: "local" | "off" = wallpaperMode === "local" && localKeys.length === 0 ? "off" : wallpaperMode;
@@ -82,7 +81,13 @@ export function Shell(props: ShellProps): React.JSX.Element {
       if (wallpaperObjectUrlRef.current) URL.revokeObjectURL(wallpaperObjectUrlRef.current);
       wallpaperObjectUrlRef.current = null;
     };
-  }, [wallpaperMode]);
+  }, [wallpaperMode, wallpaperReloadSeq]);
+
+  useEffect(() => {
+    const onWallpaperChanged = () => setWallpaperReloadSeq((x) => x + 1);
+    window.addEventListener("ui:wallpaper", onWallpaperChanged);
+    return () => window.removeEventListener("ui:wallpaper", onWallpaperChanged);
+  }, []);
 
   useEffect(() => {
     if (serverWallpaperMode === "local" || serverWallpaperMode === "off") {
@@ -181,16 +186,6 @@ export function Shell(props: ShellProps): React.JSX.Element {
               value={Math.round(glassAlpha * 100)}
               onChange={(e) => setGlassAlpha(Number(e.target.value) / 100)}
             />
-          </div>
-
-          <div className="navPanel">
-            <div className="navPanelHead">
-              <div className="navPanelTitle">壁纸缓存</div>
-              <div className="navPanelSub">{wallpaperCacheCount == null ? "—" : `${wallpaperCacheCount} 张`}</div>
-            </div>
-            <div className="muted" style={{ paddingTop: 6 }}>
-              {wallpaperMode === "off" ? "已关闭" : "本地壁纸"}
-            </div>
           </div>
 
           <div className="navFooter">
