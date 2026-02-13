@@ -1,0 +1,12 @@
+{"id":"e4b07835-fc14-4d06-8239-96a346bc08a4","ts":"2026-02-13T12:22:55.640Z","level":"info","scope":"SERVER","message":"Admin server booting..."}
+{"id":"fcc07c64-40d9-47cc-81ab-8784457be90c","ts":"2026-02-13T12:22:55.660Z","level":"info","scope":"SERVER","message":"Listening on http://127.0.0.1:8787","details":{"ws":"ws://127.0.0.1:8787/ws"}}
+{"id":"43e36c0d-a959-4f9f-92d8-fa6756e0b694","ts":"2026-02-13T12:23:07.319Z","level":"info","scope":"SERVER","message":"Admin server booting..."}
+{"id":"4ea36dec-0cd2-4db8-a5c6-a33aecf60a3e","ts":"2026-02-13T12:23:07.365Z","level":"info","scope":"SERVER","message":"Listening on http://127.0.0.1:8787","details":{"ws":"ws://127.0.0.1:8787/ws"}}
+{"id":"58dddfd1-022b-434c-9dc7-0ceb4e255714","ts":"2026-02-13T12:23:31.813Z","level":"info","scope":"SERVER","message":"Admin server booting..."}
+{"id":"151b23a6-c156-4287-8fec-cc13ab3c3312","ts":"2026-02-13T12:23:31.837Z","level":"info","scope":"SERVER","message":"Listening on http://127.0.0.1:8787","details":{"ws":"ws://127.0.0.1:8787/ws"}}
+{"id":"90f799c4-b040-48dd-a46f-ac87d09cc094","ts":"2026-02-13T12:24:03.616Z","level":"info","scope":"SERVER","message":"Admin server booting..."}
+{"id":"c5ba0067-5d8c-46a4-9294-3276c5d03cde","ts":"2026-02-13T12:24:03.643Z","level":"info","scope":"SERVER","message":"Listening on http://127.0.0.1:8787","details":{"ws":"ws://127.0.0.1:8787/ws"}}
+{"id":"721c8840-eaa3-4d3c-a1ec-3ad3bbbf6f54","ts":"2026-02-13T12:24:14.014Z","level":"info","scope":"SERVER","message":"Admin server booting..."}
+{"id":"31ebeeee-8c80-4315-a94c-81938d7bfdc4","ts":"2026-02-13T12:24:14.044Z","level":"info","scope":"SERVER","message":"Listening on http://127.0.0.1:8787","details":{"ws":"ws://127.0.0.1:8787/ws"}}
+{"id":"cf1cbe66-b582-4db2-a72d-9456a6e1eef4","ts":"2026-02-13T12:29:52.298Z","level":"info","scope":"SERVER","message":"Admin server booting..."}
+{"id":"2b1bd97e-5dcb-4d28-ace0-cca9ee6355f8","ts":"2026-02-13T12:29:52.339Z","level":"info","scope":"SERVER","message":"Listening on http://127.0.0.1:8787","details":{"ws":"ws://127.0.0.1:8787/ws"}}

@@ -11,7 +11,14 @@ type SortDir = "asc" | "desc";
 /**
  * 以更紧凑的形式格式化金币显示（tabular 视觉更稳定）。
  */
-function formatGold(v: number | null | undefined): string {
+function formatGold(v: number | null | undefined, opts?: { maxFractionDigits?: number }): string {
+  const n = typeof v === "number" ? v : NaN;
+  if (!Number.isFinite(n)) return "—";
+  const maxFractionDigits = typeof opts?.maxFractionDigits === "number" ? opts.maxFractionDigits : 0;
+  return n.toLocaleString(undefined, { maximumFractionDigits: maxFractionDigits });
+}
+
+function formatCount(v: number | null | undefined): string {
   const n = typeof v === "number" ? v : NaN;
   if (!Number.isFinite(n)) return "—";
   return Math.floor(n).toLocaleString();
@@ -32,8 +39,40 @@ function formatKind(kind: "gold" | "seed" | "fruit" | "item"): string {
  */
 function calcTotalGold(count: number, unitPriceGold: number | null): number | null {
   if (!Number.isFinite(count) || count <= 0) return null;
-  if (typeof unitPriceGold !== "number" || !Number.isFinite(unitPriceGold) || unitPriceGold <= 0) return null;
+  if (typeof unitPriceGold !== "number" || !Number.isFinite(unitPriceGold) || unitPriceGold < 0) return null;
   return Math.round(count * unitPriceGold * 10000) / 10000;
+}
+
+type BagItemView = {
+  id: number;
+  kind: "gold" | "seed" | "fruit" | "item";
+  name: string;
+  count: number;
+  unitPriceGold: number | null;
+  totalGold: number | null;
+};
+
+/**
+ * 合并同一种类、同一 ID、同一单价的背包条目，避免重复 key 导致的渲染残留/错乱。
+ */
+function compactBagItems(input: BagItemView[]): BagItemView[] {
+  const map = new Map<string, BagItemView>();
+  for (const x of input) {
+    const priceKey = x.unitPriceGold == null ? "n" : String(x.unitPriceGold);
+    const key = `${x.kind}:${x.id}:${priceKey}`;
+    const prev = map.get(key);
+    if (!prev) {
+      map.set(key, x);
+      continue;
+    }
+    const nextCount = prev.count + x.count;
+    map.set(key, {
+      ...prev,
+      count: nextCount,
+      totalGold: calcTotalGold(nextCount, prev.unitPriceGold),
+    });
+  }
+  return Array.from(map.values());
 }
 
 function useIsNarrow(maxWidthPx: number): boolean {
@@ -81,9 +120,9 @@ export function BagPage(): React.JSX.Element {
   const bag = data.snapshot?.bot?.bag ?? null;
   const totalCount = bag?.items?.length ?? 0;
   const [kind, setKind] = useState<BagKind>("all");
+  const [search, setSearch] = useState("");
   const [sortKey, setSortKey] = useState<SortKey>("totalGold");
   const [sortDir, setSortDir] = useState<SortDir>("desc");
-  const [search, setSearch] = useState("");
   const isNarrow = useIsNarrow(720);
 
   function defaultSortDir(key: SortKey): SortDir {
@@ -107,40 +146,39 @@ export function BagPage(): React.JSX.Element {
   const list = useMemo(() => {
     const raw = bag?.items ?? [];
     const q = search.trim().toLowerCase();
-
     const filtered = raw.filter((x) => {
       if (kind !== "all" && x.kind !== kind) return false;
       if (!q) return true;
-      const hay = `${x.name} ${x.id} ${x.kind}`.toLowerCase();
+      const hay = `${x.name} ${x.id} ${x.kind} ${formatKind(x.kind)}`.toLowerCase();
       return hay.includes(q);
     });
 
     const withTotal = filtered.map((x) => ({
       ...x,
       totalGold: calcTotalGold(x.count, x.unitPriceGold),
-    }));
+    })) satisfies BagItemView[];
 
-    withTotal.sort((a, b) => {
+    const compacted = compactBagItems(withTotal);
+
+    compacted.sort((a, b) => {
       const kindRank: Record<(typeof a)["kind"], number> = { gold: 0, seed: 1, fruit: 2, item: 3 };
+      const dir = sortDir === "asc" ? 1 : -1;
       const cmpNullLast = (av: number | null, bv: number | null): number => {
         if (av == null && bv == null) return 0;
         if (av == null) return 1;
         if (bv == null) return -1;
-        return sortDir === "asc" ? av - bv : bv - av;
+        return dir * (av - bv);
       };
 
-      if (sortKey === "name") return (sortDir === "asc" ? 1 : -1) * a.name.localeCompare(b.name, "zh-Hans-CN") || a.id - b.id;
-      if (sortKey === "id") return (sortDir === "asc" ? 1 : -1) * (a.id - b.id) || a.name.localeCompare(b.name, "zh-Hans-CN");
-      if (sortKey === "kind") {
-        const d = (sortDir === "asc" ? 1 : -1) * (kindRank[a.kind] - kindRank[b.kind]);
-        return d || a.name.localeCompare(b.name, "zh-Hans-CN") || a.id - b.id;
-      }
-      if (sortKey === "count") return (sortDir === "asc" ? 1 : -1) * (a.count - b.count) || a.id - b.id;
+      if (sortKey === "name") return dir * a.name.localeCompare(b.name, "zh-Hans-CN") || a.id - b.id;
+      if (sortKey === "id") return dir * (a.id - b.id) || a.name.localeCompare(b.name, "zh-Hans-CN");
+      if (sortKey === "kind") return dir * (kindRank[a.kind] - kindRank[b.kind]) || a.id - b.id;
+      if (sortKey === "count") return dir * (a.count - b.count) || a.id - b.id;
       if (sortKey === "unitPriceGold") return cmpNullLast(a.unitPriceGold, b.unitPriceGold) || a.id - b.id;
-      return cmpNullLast(a.totalGold, b.totalGold) || (sortDir === "asc" ? a.count - b.count : b.count - a.count) || a.id - b.id;
+      return cmpNullLast(a.totalGold, b.totalGold) || dir * (a.count - b.count) || a.id - b.id;
     });
 
-    return withTotal;
+    return compacted;
   }, [bag?.items, kind, search, sortDir, sortKey]);
 
   const totalGold = useMemo(() => {
@@ -151,7 +189,7 @@ export function BagPage(): React.JSX.Element {
       return sum + v;
     }, 0);
     if (!items.length) return null;
-    if (!Number.isFinite(acc) || acc <= 0) return null;
+    if (!Number.isFinite(acc)) return null;
     return Math.round(acc * 100) / 100;
   }, [bag?.items]);
 
@@ -167,7 +205,7 @@ export function BagPage(): React.JSX.Element {
               <span className="mono">
                 {list.length}/{totalCount} 项
               </span>
-              {totalGold != null ? <span className="mono muted">≈ {formatGold(totalGold)}</span> : null}
+              {totalGold != null ? <span className="mono muted">≈ {formatGold(totalGold, { maxFractionDigits: 2 })}</span> : null}
             </div>
           }
         >
@@ -236,47 +274,6 @@ export function BagPage(): React.JSX.Element {
                   道具
                 </button>
               </div>
-              <div className="seg" role="tablist" aria-label="背包排序">
-                <button
-                  type="button"
-                  className={sortKey === "totalGold" ? "segBtn active" : "segBtn"}
-                  onClick={(e) => {
-                    e.preventDefault();
-                    setSortKey("totalGold");
-                    setSortDir("desc");
-                  }}
-                  role="tab"
-                  aria-selected={sortKey === "totalGold"}
-                >
-                  按总价
-                </button>
-                <button
-                  type="button"
-                  className={sortKey === "count" ? "segBtn active" : "segBtn"}
-                  onClick={(e) => {
-                    e.preventDefault();
-                    setSortKey("count");
-                    setSortDir("desc");
-                  }}
-                  role="tab"
-                  aria-selected={sortKey === "count"}
-                >
-                  按数量
-                </button>
-                <button
-                  type="button"
-                  className={sortKey === "name" ? "segBtn active" : "segBtn"}
-                  onClick={(e) => {
-                    e.preventDefault();
-                    setSortKey("name");
-                    setSortDir("asc");
-                  }}
-                  role="tab"
-                  aria-selected={sortKey === "name"}
-                >
-                  按名称
-                </button>
-              </div>
             </div>
           </div>
 
@@ -284,16 +281,16 @@ export function BagPage(): React.JSX.Element {
             <div className="mobileCards">
               {list.length ? (
                 list.map((x) => (
-                  <div className="mobileCard" key={`${x.kind}-${x.id}`}>
+                  <div className="mobileCard" key={`${x.kind}-${x.id}-${x.unitPriceGold ?? "n"}`}>
                     <div className="mobileCardTop">
                       <div className="mobileCardTitle mono">{x.name}</div>
-                      <div className="mobileCardRight mono">{formatGold(x.count)}</div>
+                      <div className="mobileCardRight mono">{formatCount(x.count)}</div>
                     </div>
                     <div className="mobileCardMeta">
                       <span className="chip mono">{formatKind(x.kind)}</span>
                       <span className="chip mono">ID {x.id}</span>
-                      {x.unitPriceGold != null ? <span className="chip mono">单价 {formatGold(x.unitPriceGold)}</span> : null}
-                      {x.totalGold != null ? <span className="chip mono">总价 {formatGold(x.totalGold)}</span> : null}
+                      {x.unitPriceGold != null ? <span className="chip mono">单价 {formatGold(x.unitPriceGold, { maxFractionDigits: 4 })}</span> : null}
+                      {x.totalGold != null ? <span className="chip mono">总价 {formatGold(x.totalGold, { maxFractionDigits: 2 })}</span> : null}
                     </div>
                     <div className="mobileCardSub mono muted">{bag ? formatDateTime(new Date(bag.updatedAt).toISOString()) : "—"}</div>
                   </div>
@@ -319,13 +316,13 @@ export function BagPage(): React.JSX.Element {
                 <tbody>
                   {list.length ? (
                     list.map((x) => (
-                      <tr key={`${x.kind}-${x.id}`}>
+                      <tr key={`${x.kind}-${x.id}-${x.unitPriceGold ?? "n"}`}>
                         <td className="tdName mono">{x.name}</td>
                         <td className="tdNum mono">{x.id}</td>
                         <td className="mono">{formatKind(x.kind)}</td>
-                        <td className="tdNum mono">{formatGold(x.count)}</td>
-                        <td className="tdNum mono">{x.unitPriceGold != null ? formatGold(x.unitPriceGold) : "—"}</td>
-                        <td className="tdNum mono">{x.totalGold != null ? formatGold(x.totalGold) : "—"}</td>
+                        <td className="tdNum mono">{formatCount(x.count)}</td>
+                        <td className="tdNum mono">{x.unitPriceGold != null ? formatGold(x.unitPriceGold, { maxFractionDigits: 4 }) : "—"}</td>
+                        <td className="tdNum mono">{x.totalGold != null ? formatGold(x.totalGold, { maxFractionDigits: 2 }) : "—"}</td>
                         <td className="mono muted">{bag ? formatDateTime(new Date(bag.updatedAt).toISOString()) : "—"}</td>
                       </tr>
                     ))
