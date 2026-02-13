@@ -352,7 +352,7 @@ export class BotController {
     const networkMod = this.require(path.join(this.projectRoot, "src", "network.js")) as {
       connect: (code: string, onLoginSuccess: () => void) => void;
       cleanup: () => void;
-      getWs: () => { close: () => void; readyState?: number } | null;
+      getWs: () => { close: () => void; readyState?: number; on?: (evt: string, cb: (...args: unknown[]) => void) => void } | null;
       getUserState: () => { gid: number; name: string; level: number; gold: number; exp: number };
     };
     const protoMod = this.require(path.join(this.projectRoot, "src", "proto.js")) as {
@@ -492,6 +492,35 @@ export class BotController {
 
     const ws = networkMod.getWs();
     if (ws) {
+      const hint =
+        input.platform === "qq"
+          ? "（若你抓的是微信 code，请把平台改成 wx 再启动）"
+          : "（若你抓的是 QQ code，请把平台改成 qq 再启动）";
+
+      ws.on?.("close", (closeCode) => {
+        if (!this.status.running) return;
+        this.status.connected = false;
+        const code = typeof closeCode === "number" ? closeCode : -1;
+        this.status.lastError = `[WS] 连接关闭 (code=${code})`;
+        void this.logBuffer.append({
+          level: code === 1000 ? "info" : "warn",
+          scope: "WS",
+          message: `[WS] 连接关闭 (code=${code}) ${hint}`,
+        });
+        try {
+          this.onWsClosed?.();
+        } catch {
+          return;
+        }
+      });
+
+      ws.on?.("error", (err) => {
+        if (!this.status.running) return;
+        const msg = err instanceof Error ? err.message : "unknown";
+        this.status.lastError = `[WS] 错误: ${msg}`;
+        void this.logBuffer.append({ level: "warn", scope: "WS", message: `[WS] 错误: ${msg}` });
+      });
+
       const originalClose = ws.close.bind(ws);
       ws.close = () => {
         try {
@@ -536,10 +565,10 @@ export class BotController {
     this.stopFn = null;
   }
 
-  static toStartInput(config: RuntimeConfig, code: string): StartBotInput {
+  static toStartInput(config: RuntimeConfig, code: string, platformOverride?: "qq" | "wx"): StartBotInput {
     return {
       code,
-      platform: config.platform,
+      platform: platformOverride ?? config.platform,
       selfIntervalSecMin: config.selfIntervalSecMin,
       selfIntervalSecMax: config.selfIntervalSecMax,
       friendIntervalSecMin: config.friendIntervalSecMin,

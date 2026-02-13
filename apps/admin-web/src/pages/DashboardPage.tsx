@@ -160,10 +160,17 @@ export function DashboardPage(): React.JSX.Element {
           stopQrPolling();
           return;
         }
-        setCode(data.code);
-        setQrStatus("登录成功，已填入 code");
+        const nextCode = data.code;
+        setCode(nextCode);
+        setQrStatus("登录成功，正在启动 bot...");
         stopQrPolling();
         setQrOpen(false);
+
+        if (!botRunning) {
+          await startBotWithCode(nextCode);
+        } else {
+          setActionError("已填入 code，bot 已在运行");
+        }
         return;
       }
       if (data.ret === "65") {
@@ -197,6 +204,20 @@ export function DashboardPage(): React.JSX.Element {
         return;
       }
       setQrStatus("扫码状态异常");
+    }
+  }
+
+  async function startBotWithCode(nextCode: string): Promise<void> {
+    setActionError(null);
+    setActionLoading(true);
+    try {
+      await apiFetch("/api/bot/start", { method: "POST", token: auth.token, body: { code: nextCode, platform: "qq" } });
+      setCode("");
+    } catch (e: unknown) {
+      const err = e as ApiError;
+      setActionError(err.message ?? err.code ?? "启动失败");
+    } finally {
+      setActionLoading(false);
     }
   }
 

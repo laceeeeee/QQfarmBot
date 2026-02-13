@@ -279,13 +279,18 @@ export function createApp(services) {
         res.json({ status: services.bot.getStatus() });
     }));
     app.post("/api/bot/start", requireAuth(services.env.JWT_SECRET), requireRole("admin"), asyncHandler(async (req, res) => {
-        const body = z.object({ code: z.string().min(5) }).parse(req.body);
+        const body = z
+            .object({
+            code: z.string().min(5),
+            platform: z.enum(["qq", "wx"]).optional(),
+        })
+            .parse(req.body);
         const didReset = await services.statsStore.resetIfCodeChanged(body.code);
         if (didReset) {
             await services.logBuffer.append({ level: "info", scope: "系统", message: "检测到 code 变更，统计已重置" });
         }
         const config = await services.configStore.get();
-        await services.bot.start(BotController.toStartInput(config, body.code));
+        await services.bot.start(BotController.toStartInput(config, body.code, body.platform));
         res.json({ ok: true, status: services.bot.getStatus() });
     }));
     app.post("/api/bot/stop", requireAuth(services.env.JWT_SECRET), requireRole("admin"), asyncHandler(async (_req, res) => {
