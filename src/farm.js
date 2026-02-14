@@ -7,7 +7,14 @@ const { CONFIG, PlantPhase, PHASE_NAMES } = require('./config');
 const { types } = require('./proto');
 const { sendMsgAsync, getUserState, networkEvents } = require('./network');
 const { toLong, toNum, getServerTimeSec, toTimeSec, log, logWarn, sleep, pickIntervalMs, botEvents } = require('./utils');
-const { getPlantNameBySeedId, getPlantName, getPlantExp, formatGrowTime, getPlantGrowTime, getLatestUnlockedSeedId } = require('./gameConfig');
+const {
+    getPlantNameBySeedId,
+    getPlantName,
+    getPlantExp,
+    formatGrowTime,
+    getPlantGrowTime,
+    getPlantBySeedId,
+} = require('./gameConfig');
 const { getPlantingRecommendation } = require('../tools/calc-exp-yield');
 
 // ============ 内部状态 ============
@@ -289,6 +296,44 @@ async function findBestSeed(landsCount) {
         return null;
     }
 
+    /**
+     * 从可购买且已解锁的种子中选择“最新解锁”的种子。
+     * @param {Array<{ seedId: number; requiredLevel: number }>} list
+     * @returns {{ seedId: number } | null}
+     */
+    function pickLatestFromAvailable(list) {
+        if (!list || list.length === 0) return null;
+        let best = null;
+        for (const item of list) {
+            if (!item) continue;
+            const seedId = toNum(item.seedId);
+            const requiredLevel = toNum(item.requiredLevel);
+            if (!Number.isFinite(seedId) || seedId <= 0) continue;
+            const plant = getPlantBySeedId(seedId);
+            const exp = plant && Number.isFinite(plant.exp) ? Number(plant.exp) : 0;
+            const pick = { seedId, requiredLevel, exp };
+            if (!best) {
+                best = pick;
+                continue;
+            }
+            if (pick.requiredLevel > best.requiredLevel) {
+                best = pick;
+                continue;
+            }
+            if (pick.requiredLevel === best.requiredLevel) {
+                if (pick.exp > best.exp) {
+                    best = pick;
+                    continue;
+                }
+                if (pick.exp === best.exp && pick.seedId > best.seedId) {
+                    best = pick;
+                    continue;
+                }
+            }
+        }
+        return best;
+    }
+
     const fixedSeedId = toNum(CONFIG.fixedSeedId);
     if (fixedSeedId > 0) {
         const hit = available.find(x => x.seedId === fixedSeedId);
@@ -297,13 +342,12 @@ async function findBestSeed(landsCount) {
     }
 
     if (CONFIG.forceLatestLevelCrop) {
-        const latestSeedId = getLatestUnlockedSeedId(state.level);
-        if (latestSeedId) {
-            const hit = available.find(x => x.seedId === latestSeedId);
+        const latest = pickLatestFromAvailable(available);
+        if (latest) {
+            const hit = available.find(x => x.seedId === latest.seedId);
             if (hit) return hit;
-            logWarn('商店', `最新解锁作物不可购买或未解锁: seedId=${latestSeedId}，将改用自动推荐`);
         } else {
-            logWarn('商店', '未找到最新解锁作物，改用自动推荐');
+            logWarn('商店', '未找到商店可购买且已解锁的作物，改用自动推荐');
         }
     }
 
