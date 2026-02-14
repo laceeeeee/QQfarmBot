@@ -28,6 +28,7 @@ const StoredRuntimeConfigSchema = z.object({
     farming: z
         .object({
         forceLowestLevelCrop: z.boolean(),
+        forceLatestLevelCrop: z.boolean().optional(),
         fixedSeedId: z.number().int().min(1).max(1_000_000_000).optional(),
     })
         .optional(),
@@ -130,7 +131,7 @@ export class ConfigStore {
             ...storedAutomation,
             autoFriendFarm: storedAutomation.autoFriendFarm ?? true,
         };
-        const farming = stored.farming ?? { forceLowestLevelCrop: false };
+        const farming = stored.farming ?? { forceLowestLevelCrop: false, forceLatestLevelCrop: false };
         return {
             platform: stored.platform,
             selfIntervalSecMin: stored.selfIntervalSecMin,
@@ -138,7 +139,11 @@ export class ConfigStore {
             friendIntervalSecMin: stored.friendIntervalSecMin,
             friendIntervalSecMax: stored.friendIntervalSecMax,
             automation,
-            farming,
+            farming: {
+                forceLowestLevelCrop: Boolean(farming.forceLowestLevelCrop),
+                forceLatestLevelCrop: Boolean(farming.forceLatestLevelCrop),
+                fixedSeedId: farming.fixedSeedId,
+            },
             ui,
             smtp: stored.smtp
                 ? {
@@ -175,7 +180,7 @@ export class ConfigStore {
                 autoTask: true,
                 autoSell: true,
             },
-            farming: { forceLowestLevelCrop: false },
+            farming: { forceLowestLevelCrop: false, forceLatestLevelCrop: false },
             ui: { wallpaper: { sync: true, mode: "local" } },
         };
         const raw = await readJsonFile(this.filePath, fallback);
@@ -204,7 +209,7 @@ export class ConfigStore {
                 autoTask: true,
                 autoSell: true,
             },
-            farming: { forceLowestLevelCrop: false },
+            farming: { forceLowestLevelCrop: false, forceLatestLevelCrop: false },
             ui: { wallpaper: { sync: true, mode: "local" } },
         };
         const raw = await readJsonFile(this.filePath, fallback);
@@ -231,6 +236,7 @@ export class ConfigStore {
             farming: parsed.farming
                 ? {
                     forceLowestLevelCrop: parsed.farming.forceLowestLevelCrop,
+                    forceLatestLevelCrop: parsed.farming.forceLatestLevelCrop ?? current.farming?.forceLatestLevelCrop ?? false,
                     fixedSeedId: parsed.farming.fixedSeedId,
                 }
                 : current.farming,

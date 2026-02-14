@@ -19,6 +19,7 @@ const CONFIG = {
     autoTask: true,
     autoSell: true,
     forceLowestLevelCrop: false,  // 开启后固定种最低等级作物（通常是白萝卜），跳过经验效率分析
+    forceLatestLevelCrop: false,
     fixedSeedId: undefined,       // 指定种植种子 ID（优先级高于经验效率推荐）
 };
 

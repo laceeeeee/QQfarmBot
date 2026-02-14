@@ -17,7 +17,8 @@
     "cors": "^2.8.5",
     "express": "^4.21.2",
     "jsonwebtoken": "^9.0.2",
-    "nodemailer": "^6.9.16",
+    "nodemailer": "^8.0.1",
+    "vite": "7.3.1",
     "ws": "^8.19.0",
     "zod": "^3.24.1"
   },
@@ -35,6 +36,6 @@
     "supertest": "^7.0.0",
     "tsx": "^4.19.2",
     "typescript": "^5.7.3",
-    "vitest": "^2.1.8"
+    "vitest": "^4.0.18"
   }
 }

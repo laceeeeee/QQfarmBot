@@ -24,9 +24,19 @@ export function createApp(services) {
      */
     function getSeedList() {
         const filePath = path.join(services.projectRoot, "gameConfig", "Plant.json");
+        const shopPath = path.join(services.projectRoot, "tools", "seed-shop-merged-export.json");
         const stat = fs.statSync(filePath);
+        const shopStat = (() => {
+            try {
+                return fs.statSync(shopPath);
+            }
+            catch {
+                return null;
+            }
+        })();
+        const shopMtimeMs = shopStat ? shopStat.mtimeMs : 0;
         const cached = seedListCache;
-        if (cached && cached.mtimeMs === stat.mtimeMs)
+        if (cached && cached.mtimeMs === stat.mtimeMs && cached.shopMtimeMs === shopMtimeMs)
             return cached;
         const raw = fs.readFileSync(filePath, "utf-8");
         const parsed = JSON.parse(raw);
@@ -56,6 +66,34 @@ export function createApp(services) {
             })
                 .filter((x) => Boolean(x));
         }
+        /**
+         * 解析商城导出文件，构建 seedId -> unlocked/exp 的索引。
+         */
+        function readShopSeedIndex() {
+            try {
+                const rawShop = fs.readFileSync(shopPath, "utf-8");
+                const parsedShop = JSON.parse(rawShop);
+                const rows = parsedShop?.rows;
+                if (!Array.isArray(rows))
+                    return new Map();
+                const map = new Map();
+                for (const row of rows) {
+                    if (!row || typeof row !== "object")
+                        continue;
+                    const seedId = Number(row.seedId);
+                    if (!Number.isFinite(seedId) || seedId <= 0)
+                        continue;
+                    const expRaw = Number(row.exp);
+                    const unlockedRaw = row.unlocked;
+                    map.set(seedId, { unlocked: Boolean(unlockedRaw), exp: Number.isFinite(expRaw) ? expRaw : null });
+                }
+                return map;
+            }
+            catch {
+                return new Map();
+            }
+        }
+        const shopIndex = readShopSeedIndex();
         const items = parsed
             .map((row) => {
             const plantId = Number(row.id);
@@ -63,12 +101,16 @@ export function createApp(services) {
             const name = typeof row.name === "string" ? row.name : "";
             const landLevelNeed = Number(row.land_level_need);
             const seasons = Number(row.seasons);
-            const exp = Number(row.exp);
+            const expRaw = Number(row.exp);
             const fruit = row.fruit;
             const fruitId = fruit && fruit.id != null ? Number(fruit.id) : null;
             const fruitCount = fruit && fruit.count != null ? Number(fruit.count) : null;
             const growPhases = parseGrowPhases(row.grow_phases);
             const totalGrowSec = growPhases.length > 0 ? growPhases.reduce((sum, x) => sum + (Number.isFinite(x.sec) ? x.sec : 0), 0) : null;
+            const shopMeta = shopIndex.get(seedId);
+            const baseExp = Number.isFinite(expRaw) ? expRaw : 0;
+            const shopExp = shopMeta?.exp ?? null;
+            const expFinal = Number.isFinite(shopExp) ? Number(shopExp) : baseExp;
             if (!Number.isFinite(plantId) || plantId <= 0)
                 return null;
             if (!Number.isFinite(seedId) || seedId <= 0)
@@ -81,16 +123,18 @@ export function createApp(services) {
                 name,
                 landLevelNeed: Number.isFinite(landLevelNeed) ? landLevelNeed : 0,
                 seasons: Number.isFinite(seasons) ? seasons : 0,
-                exp: Number.isFinite(exp) ? exp : 0,
+                exp: expFinal,
                 fruitId: fruitId != null && Number.isFinite(fruitId) ? fruitId : null,
                 fruitCount: fruitCount != null && Number.isFinite(fruitCount) ? fruitCount : null,
                 totalGrowSec,
                 growPhases,
+                shopAvailable: Boolean(shopMeta),
+                shopUnlocked: Boolean(shopMeta?.unlocked),
             };
         })
             .filter((x) => Boolean(x))
             .sort((a, b) => a.seedId - b.seedId || a.plantId - b.plantId);
-        seedListCache = { mtimeMs: stat.mtimeMs, updatedAtMs: Date.now(), items };
+        seedListCache = { mtimeMs: stat.mtimeMs, shopMtimeMs, updatedAtMs: Date.now(), items };
         return seedListCache;
     }
     app.get("/healthz", (_req, res) => {

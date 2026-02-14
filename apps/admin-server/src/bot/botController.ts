@@ -1,4 +1,5 @@
 import path from "node:path";
+import fs from "node:fs";
 import { createRequire } from "node:module";
 import type { LogBuffer } from "../logging/logBuffer";
 import type { RuntimeConfig } from "../runtime/runtimeState";
@@ -118,6 +119,7 @@ export class BotController {
   private onWsClosed: (() => void) | null = null;
   private userPollTimer: NodeJS.Timeout | null = null;
   private fatalWs400Triggered = false;
+  private patrolDisconnectTriggered = false;
   private levelExpStarts: number[] | null = null;
   private lifecycle = Promise.resolve();
   private friendControl: { start: () => void; stop: () => void } | null = null;
@@ -129,8 +131,10 @@ export class BotController {
         seedPriceBySeedId: Map<number, number>;
         seedNameBySeedId: Map<number, string>;
         fruitByFruitId: Map<number, { name: string; fruitCount: number | null; seedId: number | null }>;
+        goodsNameById: Map<number, string>;
       }
     | null = null;
+  private bagIndexMeta: { plantMtimeMs: number; shopMtimeMs: number; goodsMtimeMs: number } | null = null;
   private unsubscribeBotVisit: (() => void) | null = null;
 
   constructor(opts: { projectRoot: string; logBuffer: LogBuffer; configStore: ConfigStore }) {
@@ -167,13 +171,57 @@ export class BotController {
    * 构建背包定价/作物映射索引（Plant.json + 种子商店导出数据）。
    */
   private getBagIndex(): NonNullable<BotController["bagIndex"]> {
-    if (this.bagIndex) return this.bagIndex;
+    const plantPath = path.join(this.projectRoot, "gameConfig", "Plant.json");
+    const shopPath = path.join(this.projectRoot, "tools", "seed-shop-merged-export.json");
+    const goodsPath = path.join(this.projectRoot, "gameConfig", "goods.txt");
+    let plantMtimeMs = 0;
+    let shopMtimeMs = 0;
+    let goodsMtimeMs = 0;
+    try {
+      plantMtimeMs = fs.statSync(plantPath).mtimeMs;
+    } catch {
+      plantMtimeMs = 0;
+    }
+    try {
+      shopMtimeMs = fs.statSync(shopPath).mtimeMs;
+    } catch {
+      shopMtimeMs = 0;
+    }
+    try {
+      goodsMtimeMs = fs.statSync(goodsPath).mtimeMs;
+    } catch {
+      goodsMtimeMs = 0;
+    }
+    if (
+      this.bagIndex &&
+      this.bagIndexMeta &&
+      this.bagIndexMeta.plantMtimeMs === plantMtimeMs &&
+      this.bagIndexMeta.shopMtimeMs === shopMtimeMs &&
+      this.bagIndexMeta.goodsMtimeMs === goodsMtimeMs
+    ) {
+      return this.bagIndex;
+    }
+    const req = this.require as NodeRequire & {
+      cache?: Record<string, unknown>;
+      resolve?: (id: string) => string;
+    };
+    const clearModuleCache = (modulePath: string): void => {
+      try {
+        const resolved = req.resolve ? req.resolve(modulePath) : modulePath;
+        if (req.cache && req.cache[resolved]) delete req.cache[resolved];
+      } catch {
+        return;
+      }
+    };
+    clearModuleCache(plantPath);
+    clearModuleCache(shopPath);
     const seedPriceBySeedId = new Map<number, number>();
     const seedNameBySeedId = new Map<number, string>();
     const fruitByFruitId = new Map<number, { name: string; fruitCount: number | null; seedId: number | null }>();
+    const goodsNameById = new Map<number, string>();
 
     try {
-      const plantList = this.require(path.join(this.projectRoot, "gameConfig", "Plant.json")) as Array<{
+      const plantList = this.require(plantPath) as Array<{
         id: number;
         name: string;
         seed_id?: number;
@@ -196,7 +244,7 @@ export class BotController {
     }
 
     try {
-      const exported = this.require(path.join(this.projectRoot, "tools", "seed-shop-merged-export.json")) as {
+      const exported = this.require(shopPath) as {
         rows?: Array<{ seedId: number; name?: string; price?: number; fruitId?: number; fruitCount?: number }>;
       };
       for (const r of exported?.rows ?? []) {
@@ -211,7 +259,25 @@ export class BotController {
       // ignore
     }
 
-    this.bagIndex = { seedPriceBySeedId, seedNameBySeedId, fruitByFruitId };
+    try {
+      let raw = fs.readFileSync(goodsPath, "utf-8");
+      if (raw.charCodeAt(0) === 0xfeff) raw = raw.slice(1);
+      for (const line of raw.split(/\r?\n/)) {
+        const trimmed = line.trim();
+        if (!trimmed) continue;
+        const idx = trimmed.indexOf(":");
+        if (idx <= 0) continue;
+        const id = Number(trimmed.slice(0, idx).trim());
+        const name = trimmed.slice(idx + 1).trim();
+        if (!Number.isFinite(id) || id <= 0 || !name) continue;
+        goodsNameById.set(id, name);
+      }
+    } catch {
+      // ignore
+    }
+
+    this.bagIndex = { seedPriceBySeedId, seedNameBySeedId, fruitByFruitId, goodsNameById };
+    this.bagIndexMeta = { plantMtimeMs, shopMtimeMs, goodsMtimeMs };
     return this.bagIndex;
   }
 
@@ -257,7 +323,8 @@ export class BotController {
             return { id, kind: "fruit" as const, name: fruitMeta.name, count, unitPriceGold: unit };
           }
 
-          return { id, kind: "item" as const, name: `物品${id}`, count, unitPriceGold: null };
+          const goodsName = index.goodsNameById.get(id);
+          return { id, kind: "item" as const, name: goodsName ?? `物品${id}`, count, unitPriceGold: null };
         })
         .filter(Boolean) as NonNullable<BotStatus["bag"]>["items"];
 
@@ -291,7 +358,7 @@ export class BotController {
       autoTask: true,
       autoSell: true,
     };
-    const farming = config.farming ?? { forceLowestLevelCrop: false };
+    const farming = config.farming ?? { forceLowestLevelCrop: false, forceLatestLevelCrop: false };
     try {
       const configMod = this.require(path.join(this.projectRoot, "src", "config.js")) as unknown as {
         CONFIG: Record<string, unknown>;
@@ -306,6 +373,7 @@ export class BotController {
       botConfig.autoTask = automation.autoTask;
       botConfig.autoSell = automation.autoSell;
       botConfig.forceLowestLevelCrop = farming.forceLowestLevelCrop;
+      botConfig.forceLatestLevelCrop = Boolean(farming.forceLatestLevelCrop);
       botConfig.fixedSeedId = typeof farming.fixedSeedId === "number" ? farming.fixedSeedId : undefined;
       const wantFriendFarm = Boolean(automation.autoFriendFarm);
       if (this.status.running && this.friendControl && wantFriendFarm !== this.friendFarmEnabled) {
@@ -327,7 +395,11 @@ export class BotController {
           message: "已下发运行时配置",
           details: {
             automation,
-            farming: { forceLowestLevelCrop: farming.forceLowestLevelCrop, fixedSeedId: farming.fixedSeedId ?? null },
+            farming: {
+              forceLowestLevelCrop: farming.forceLowestLevelCrop,
+              forceLatestLevelCrop: Boolean(farming.forceLatestLevelCrop),
+              fixedSeedId: farming.fixedSeedId ?? null,
+            },
           },
         })
         .catch(() => {});
@@ -547,6 +619,7 @@ export class BotController {
   private async startInternal(input: StartBotInput): Promise<void> {
     await this.stopInternal();
     this.fatalWs400Triggered = false;
+    this.patrolDisconnectTriggered = false;
 
     const configMod = this.require(path.join(this.projectRoot, "src", "config.js")) as {
       CONFIG: Record<string, unknown>;
@@ -638,6 +711,9 @@ export class BotController {
       if (!this.status.running) return;
       if (payload.message.includes("Unexpected server response: 400")) {
         void this.handleFatalWs400(payload.message);
+      }
+      if (payload.message.includes("巡查失败") && payload.message.includes("连接未打开")) {
+        void this.handlePatrolDisconnect(payload.message);
       }
     };
     utilsMod.botEvents.on("log", onBotLog);
@@ -820,6 +896,25 @@ export class BotController {
     });
     await this.stop();
     await this.sendSmtpAlert("Bot 已停止：WS 400", `检测到错误：${msg}\n已停止 bot。请检查 code/网络环境后重新启动。`);
+  }
+
+  /**
+   * 处理巡查过程中连接未打开的异常，发送告警并停止 bot。
+   */
+  private async handlePatrolDisconnect(msg: string): Promise<void> {
+    if (this.patrolDisconnectTriggered) return;
+    this.patrolDisconnectTriggered = true;
+    this.status.lastError = msg;
+    await this.logBuffer.append({
+      level: "error",
+      scope: "系统",
+      message: "巡查失败：连接未打开，可能已经掉线，已停止 bot 并尝试发送邮件通知",
+    });
+    await this.stop();
+    await this.sendSmtpAlert(
+      "Bot 已停止：连接未打开",
+      `检测到巡查失败：${msg}\n系统判断连接已断开，已停止 bot。请检查网络/重新登录后再启动。`
+    );
   }
 
   private async sendSmtpAlert(subject: string, text: string): Promise<void> {

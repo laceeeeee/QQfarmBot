@@ -4,6 +4,22 @@
   "selfIntervalSecMax": 10,
   "friendIntervalSecMin": 3,
   "friendIntervalSecMax": 5,
+  "automation": {
+    "autoHarvest": true,
+    "autoFertilize": true,
+    "autoWater": true,
+    "autoWeed": true,
+    "autoBug": true,
+    "autoPlant": true,
+    "autoFriendFarm": true,
+    "autoTask": true,
+    "autoSell": true
+  },
+  "farming": {
+    "forceLowestLevelCrop": false,
+    "forceLatestLevelCrop": false,
+    "fixedSeedId": 20059
+  },
   "smtp": {
     "enabled": false,
     "host": "",

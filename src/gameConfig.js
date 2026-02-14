@@ -182,6 +182,47 @@ function getPlantExp(plantId) {
 }
 
 /**
+ * 根据等级获取最新解锁的种子 ID
+ * @param {number} level - 角色等级
+ * @returns {number | null}
+ */
+function getLatestUnlockedSeedId(level) {
+    const lvl = Number(level);
+    if (!Number.isFinite(lvl) || lvl <= 0) return null;
+    if (!plantConfig || !Array.isArray(plantConfig) || plantConfig.length === 0) return null;
+
+    let best = null;
+    for (const plant of plantConfig) {
+        if (!plant) continue;
+        const seedId = Number(plant.seed_id);
+        if (!Number.isFinite(seedId) || seedId <= 0) continue;
+        const requiredLevel = Number(plant.land_level_need) || 0;
+        if (requiredLevel > lvl) continue;
+        const exp = Number(plant.exp) || 0;
+        const pick = { seedId, requiredLevel, exp };
+        if (!best) {
+            best = pick;
+            continue;
+        }
+        if (pick.requiredLevel > best.requiredLevel) {
+            best = pick;
+            continue;
+        }
+        if (pick.requiredLevel === best.requiredLevel) {
+            if (pick.exp > best.exp) {
+                best = pick;
+                continue;
+            }
+            if (pick.exp === best.exp && pick.seedId > best.seedId) {
+                best = pick;
+                continue;
+            }
+        }
+    }
+    return best ? best.seedId : null;
+}
+
+/**
  * 根据果实ID获取植物名称
  * @param {number} fruitId - 果实ID
  */
@@ -214,6 +255,7 @@ module.exports = {
     getPlantFruit,
     getPlantGrowTime,
     getPlantExp,
+    getLatestUnlockedSeedId,
     formatGrowTime,
     // 果实配置
     getFruitName,

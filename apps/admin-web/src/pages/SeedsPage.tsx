@@ -39,15 +39,6 @@ function formatDurationSec(sec: number | null): string {
   return mm ? `${h}小时${mm}分` : `${h}小时`;
 }
 
-/**
- * 将 growPhases 结构渲染为一行简短对照字符串。
- */
-function formatPhaseBrief(phases: Array<{ name: string; sec: number }>): string {
-  if (!phases.length) return "—";
-  const top = phases.slice(0, 5).map((x) => `${x.name}${Math.floor(x.sec / 60)}m`);
-  return phases.length > 5 ? `${top.join(" / ")} / …` : top.join(" / ");
-}
-
 export function SeedsPage(): React.JSX.Element {
   const auth = useAuth();
   const [q, setQ] = useState("");
@@ -201,7 +192,6 @@ export function SeedsPage(): React.JSX.Element {
                   <SortTh label="经验" k="exp" align="right" />
                   <SortTh label="果实" k="fruitId" align="right" />
                   <SortTh label="总时长" k="totalGrowSec" align="right" />
-                  <th>阶段</th>
                 </tr>
               </thead>
               <tbody>
@@ -213,9 +203,8 @@ export function SeedsPage(): React.JSX.Element {
                     <td className="tdNum">{x.landLevelNeed}</td>
                     <td className="tdNum">{x.seasons}</td>
                     <td className="tdNum">{x.exp}</td>
-                    <td className="tdNum">{x.fruitId == null ? "—" : `${x.fruitId}×${x.fruitCount ?? "?"}`}</td>
+                    <td className="tdNum">{x.fruitId == null ? "—" : x.fruitCount ?? "—"}</td>
                     <td className="tdNum">{formatDurationSec(x.totalGrowSec)}</td>
-                    <td className="tdPhases">{formatPhaseBrief(x.growPhases)}</td>
                   </tr>
                 ))}
               </tbody>

@@ -54,9 +54,11 @@ export function createApp(services: Services): express.Express {
     fruitCount: number | null;
     totalGrowSec: number | null;
     growPhases: Array<{ name: string; sec: number }>;
+    shopAvailable: boolean;
+    shopUnlocked: boolean;
   };
 
-  type SeedListCache = { mtimeMs: number; updatedAtMs: number; items: SeedListItem[] };
+  type SeedListCache = { mtimeMs: number; shopMtimeMs: number; updatedAtMs: number; items: SeedListItem[] };
   let seedListCache: SeedListCache | null = null;
 
   /**
@@ -64,9 +66,18 @@ export function createApp(services: Services): express.Express {
    */
   function getSeedList(): SeedListCache {
     const filePath = path.join(services.projectRoot, "gameConfig", "Plant.json");
+    const shopPath = path.join(services.projectRoot, "tools", "seed-shop-merged-export.json");
     const stat = fs.statSync(filePath);
+    const shopStat = (() => {
+      try {
+        return fs.statSync(shopPath);
+      } catch {
+        return null;
+      }
+    })();
+    const shopMtimeMs = shopStat ? shopStat.mtimeMs : 0;
     const cached = seedListCache;
-    if (cached && cached.mtimeMs === stat.mtimeMs) return cached;
+    if (cached && cached.mtimeMs === stat.mtimeMs && cached.shopMtimeMs === shopMtimeMs) return cached;
 
     const raw = fs.readFileSync(filePath, "utf-8");
     const parsed = JSON.parse(raw) as unknown;
@@ -93,6 +104,32 @@ export function createApp(services: Services): express.Express {
         .filter((x): x is { name: string; sec: number } => Boolean(x));
     }
 
+    /**
+     * 解析商城导出文件，构建 seedId -> unlocked/exp 的索引。
+     */
+    function readShopSeedIndex(): Map<number, { unlocked: boolean; exp: number | null }> {
+      try {
+        const rawShop = fs.readFileSync(shopPath, "utf-8");
+        const parsedShop = JSON.parse(rawShop) as unknown;
+        const rows = (parsedShop as { rows?: unknown })?.rows;
+        if (!Array.isArray(rows)) return new Map();
+        const map = new Map<number, { unlocked: boolean; exp: number | null }>();
+        for (const row of rows) {
+          if (!row || typeof row !== "object") continue;
+          const seedId = Number((row as { seedId?: unknown }).seedId);
+          if (!Number.isFinite(seedId) || seedId <= 0) continue;
+          const expRaw = Number((row as { exp?: unknown }).exp);
+          const unlockedRaw = (row as { unlocked?: unknown }).unlocked;
+          map.set(seedId, { unlocked: Boolean(unlockedRaw), exp: Number.isFinite(expRaw) ? expRaw : null });
+        }
+        return map;
+      } catch {
+        return new Map();
+      }
+    }
+
+    const shopIndex = readShopSeedIndex();
+
     const items: SeedListItem[] = (parsed as Array<Record<string, unknown>>)
       .map((row) => {
         const plantId = Number(row.id);
@@ -100,13 +137,18 @@ export function createApp(services: Services): express.Express {
         const name = typeof row.name === "string" ? row.name : "";
         const landLevelNeed = Number(row.land_level_need);
         const seasons = Number(row.seasons);
-        const exp = Number(row.exp);
+        const expRaw = Number(row.exp);
         const fruit = row.fruit as { id?: unknown; count?: unknown } | undefined;
         const fruitId = fruit && fruit.id != null ? Number(fruit.id) : null;
         const fruitCount = fruit && fruit.count != null ? Number(fruit.count) : null;
         const growPhases = parseGrowPhases(row.grow_phases);
         const totalGrowSec =
           growPhases.length > 0 ? growPhases.reduce((sum, x) => sum + (Number.isFinite(x.sec) ? x.sec : 0), 0) : null;
+
+        const shopMeta = shopIndex.get(seedId);
+        const baseExp = Number.isFinite(expRaw) ? expRaw : 0;
+        const shopExp = shopMeta?.exp ?? null;
+        const expFinal = Number.isFinite(shopExp) ? Number(shopExp) : baseExp;
 
         if (!Number.isFinite(plantId) || plantId <= 0) return null;
         if (!Number.isFinite(seedId) || seedId <= 0) return null;
@@ -118,17 +160,19 @@ export function createApp(services: Services): express.Express {
           name,
           landLevelNeed: Number.isFinite(landLevelNeed) ? landLevelNeed : 0,
           seasons: Number.isFinite(seasons) ? seasons : 0,
-          exp: Number.isFinite(exp) ? exp : 0,
+          exp: expFinal,
           fruitId: fruitId != null && Number.isFinite(fruitId) ? fruitId : null,
           fruitCount: fruitCount != null && Number.isFinite(fruitCount) ? fruitCount : null,
           totalGrowSec,
           growPhases,
+          shopAvailable: Boolean(shopMeta),
+          shopUnlocked: Boolean(shopMeta?.unlocked),
         } satisfies SeedListItem;
       })
       .filter((x): x is SeedListItem => Boolean(x))
       .sort((a, b) => a.seedId - b.seedId || a.plantId - b.plantId);
 
-    seedListCache = { mtimeMs: stat.mtimeMs, updatedAtMs: Date.now(), items };
+    seedListCache = { mtimeMs: stat.mtimeMs, shopMtimeMs, updatedAtMs: Date.now(), items };
     return seedListCache;
   }
 

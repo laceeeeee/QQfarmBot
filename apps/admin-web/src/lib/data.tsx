@@ -32,6 +32,7 @@ export type Snapshot = {
     };
     farming?: {
       forceLowestLevelCrop: boolean;
+      forceLatestLevelCrop?: boolean;
       fixedSeedId?: number;
     };
     ui?: {

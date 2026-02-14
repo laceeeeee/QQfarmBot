@@ -7,7 +7,7 @@ const { CONFIG, PlantPhase, PHASE_NAMES } = require('./config');
 const { types } = require('./proto');
 const { sendMsgAsync, getUserState, networkEvents } = require('./network');
 const { toLong, toNum, getServerTimeSec, toTimeSec, log, logWarn, sleep, pickIntervalMs, botEvents } = require('./utils');
-const { getPlantNameBySeedId, getPlantName, getPlantExp, formatGrowTime, getPlantGrowTime } = require('./gameConfig');
+const { getPlantNameBySeedId, getPlantName, getPlantExp, formatGrowTime, getPlantGrowTime, getLatestUnlockedSeedId } = require('./gameConfig');
 const { getPlantingRecommendation } = require('../tools/calc-exp-yield');
 
 // ============ 内部状态 ============
@@ -294,6 +294,17 @@ async function findBestSeed(landsCount) {
         const hit = available.find(x => x.seedId === fixedSeedId);
         if (hit) return hit;
         logWarn('商店', `指定种子不可购买或未解锁: seedId=${fixedSeedId}，将改用自动推荐`);
+    }
+
+    if (CONFIG.forceLatestLevelCrop) {
+        const latestSeedId = getLatestUnlockedSeedId(state.level);
+        if (latestSeedId) {
+            const hit = available.find(x => x.seedId === latestSeedId);
+            if (hit) return hit;
+            logWarn('商店', `最新解锁作物不可购买或未解锁: seedId=${latestSeedId}，将改用自动推荐`);
+        } else {
+            logWarn('商店', '未找到最新解锁作物，改用自动推荐');
+        }
     }
 
     if (CONFIG.forceLowestLevelCrop) {

@@ -22,7 +22,7 @@ type QrCheckReply = {
 /**
  * 渲染用于标题前缀的轻量 SVG 图标。
  */
-function Icon(props: { name: "pulse" | "logs" | "bolt" | "leaf" }): React.JSX.Element {
+function Icon(props: { name: "pulse" | "logs" | "bolt" | "leaf" | "qr" }): React.JSX.Element {
   const common = { className: "miniIcon", viewBox: "0 0 24 24", fill: "none", xmlns: "http://www.w3.org/2000/svg" };
   if (props.name === "logs") {
     return (
@@ -53,6 +53,16 @@ function Icon(props: { name: "pulse" | "logs" | "bolt" | "leaf" }): React.JSX.El
           stroke="currentColor"
           strokeWidth="2"
           strokeLinejoin="round"
+        />
+      </svg>
+    );
+  }
+  if (props.name === "qr") {
+    return (
+      <svg {...common}>
+        <path
+          d="M4 4h6v6H4V4Zm0 10h6v6H4v-6Zm10-10h6v6h-6V4Zm1 1v4h4V5h-4Zm-10 1v4h4V6H5Zm0 10v4h4v-4H5Zm10 2h2v2h-2v-2Zm4 0h2v2h-2v-2Zm-4-4h6v2h-6v-2Zm0 6h2v2h-2v-2Zm4-6h2v4h-2v-4Z"
+          fill="currentColor"
         />
       </svg>
     );
@@ -103,7 +113,12 @@ export function DashboardPage(): React.JSX.Element {
   const [qrStatus, setQrStatus] = useState<string>("等待扫码");
   const [qrImage, setQrImage] = useState<string | null>(null);
   const [qrQrsig, setQrQrsig] = useState<string | null>(null);
+  const [qrUin, setQrUin] = useState<string | null>(null);
+  const [qrAvatar, setQrAvatar] = useState<string | null>(null);
   const qrPollRef = useRef<number | null>(null);
+  const [startOpen, setStartOpen] = useState(false);
+  const [startPlatform, setStartPlatform] = useState<"qq" | "wx">("qq");
+  const [startError, setStartError] = useState<string | null>(null);
 
   const botRunning = Boolean(snapshot?.bot?.running);
 
@@ -180,6 +195,8 @@ export function DashboardPage(): React.JSX.Element {
           stopQrPolling();
           return;
         }
+        setQrUin(typeof data.uin === "string" && data.uin ? data.uin : null);
+        setQrAvatar(typeof data.avatar === "string" && data.avatar ? data.avatar : null);
         const nextCode = data.code;
         setCode(nextCode);
         setQrStatus("登录成功，正在启动 bot...");
@@ -187,7 +204,7 @@ export function DashboardPage(): React.JSX.Element {
         setQrOpen(false);
 
         if (!botRunning) {
-          await startBotWithCode(nextCode);
+          await startBotWithCode(nextCode, startPlatform, "qr");
         } else {
           setActionError("已填入 code，bot 已在运行");
         }
@@ -227,15 +244,27 @@ export function DashboardPage(): React.JSX.Element {
     }
   }
 
-  async function startBotWithCode(nextCode: string): Promise<void> {
+  /**
+   * 启动 bot 并根据触发来源展示错误信息。
+   */
+  async function startBotWithCode(
+    nextCode: string,
+    platform: "qq" | "wx",
+    source: "qr" | "manual"
+  ): Promise<boolean> {
     setActionError(null);
+    if (source === "manual") setStartError(null);
     setActionLoading(true);
     try {
-      await apiFetch("/api/bot/start", { method: "POST", token: auth.token, body: { code: nextCode, platform: "qq" } });
+      await apiFetch("/api/bot/start", { method: "POST", token: auth.token, body: { code: nextCode, platform } });
       setCode("");
+      return true;
     } catch (e: unknown) {
       const err = e as ApiError;
-      setActionError(err.message ?? err.code ?? "启动失败");
+      const msg = err.message ?? err.code ?? "启动失败";
+      if (source === "manual") setStartError(msg);
+      else setActionError(msg);
+      return false;
     } finally {
       setActionLoading(false);
     }
@@ -301,6 +330,8 @@ export function DashboardPage(): React.JSX.Element {
     setQrQrsig(null);
     setQrError(null);
     setQrStatus("等待扫码");
+    setQrUin(null);
+    setQrAvatar(null);
     await createQrCode();
   }
 
@@ -318,6 +349,9 @@ export function DashboardPage(): React.JSX.Element {
     };
   }, []);
 
+  /**
+   * 点击启动或停止按钮时触发的主入口。
+   */
   async function toggleBot(): Promise<void> {
     setActionError(null);
     setActionLoading(true);
@@ -325,8 +359,8 @@ export function DashboardPage(): React.JSX.Element {
       if (botRunning) {
         await apiFetch("/api/bot/stop", { method: "POST", token: auth.token });
       } else {
-        await apiFetch("/api/bot/start", { method: "POST", token: auth.token, body: { code } });
-        setCode("");
+        setStartError(null);
+        setStartOpen(true);
       }
     } catch (e: unknown) {
       const err = e as ApiError;
@@ -334,6 +368,37 @@ export function DashboardPage(): React.JSX.Element {
     } finally {
       setActionLoading(false);
     }
+  }
+
+  /**
+   * 打开手动启动弹窗。
+   */
+  function openStartModal(): void {
+    setStartError(null);
+    setQrUin(null);
+    setQrAvatar(null);
+    setStartOpen(true);
+  }
+
+  /**
+   * 关闭手动启动弹窗并清理错误提示。
+   */
+  function closeStartModal(): void {
+    setStartError(null);
+    setStartOpen(false);
+  }
+
+  /**
+   * 提交手动启动表单并执行启动。
+   */
+  async function submitStart(): Promise<void> {
+    const nextCode = code.trim();
+    if (!nextCode) {
+      setStartError("请输入 code");
+      return;
+    }
+    const ok = await startBotWithCode(nextCode, startPlatform, "manual");
+    if (ok) setStartOpen(false);
   }
 
   const counters = snapshot?.counters;
@@ -498,49 +563,58 @@ export function DashboardPage(): React.JSX.Element {
     <div className="dash">
       <section className="glass dashBar">
         <div className="dashBarLeft">
-          <div className="dashTitle">
-            <span className="titleWithIcon">
-              <Icon name="pulse" />
-              <span>数据 & 日志</span>
-            </span>
+          <div className="dashTitleRow">
+            <div className="dashTitle">
+              <span className="titleWithIcon">
+                <Icon name="pulse" />
+                <span>数据 & 日志</span>
+              </span>
+            </div>
+            <div className="dashBarTabs seg" role="tablist" aria-label="数据视图">
+              <button
+                className={activeTab === "logs" ? "segBtn active" : "segBtn"}
+                onClick={() => setActiveTab("logs")}
+                role="tab"
+                aria-selected={activeTab === "logs"}
+              >
+                日志
+              </button>
+              <button
+                className={activeTab === "overview" ? "segBtn active" : "segBtn"}
+                onClick={() => setActiveTab("overview")}
+                role="tab"
+                aria-selected={activeTab === "overview"}
+              >
+                概览
+              </button>
+            </div>
           </div>
           <div className="dashSub muted">{snapshot ? `更新时间 ${formatDateTime(snapshot.ts)}` : "等待数据推送..."}</div>
         </div>
-        <div className="dashBarTabs seg" role="tablist" aria-label="数据视图">
-          <button
-            className={activeTab === "logs" ? "segBtn active" : "segBtn"}
-            onClick={() => setActiveTab("logs")}
-            role="tab"
-            aria-selected={activeTab === "logs"}
-          >
-            日志
-          </button>
-          <button
-            className={activeTab === "overview" ? "segBtn active" : "segBtn"}
-            onClick={() => setActiveTab("overview")}
-            role="tab"
-            aria-selected={activeTab === "overview"}
-          >
-            概览
-          </button>
-        </div>
         <div className="dashBarRight">
+          {qrUin || qrAvatar ? (
+            <div className="dashQrUser">
+              {qrAvatar ? <img className="dashQrAvatar" src={qrAvatar} alt="QQ Avatar" /> : <span className="dashQrAvatarFallback">QQ</span>}
+              <span className="dashQrUin">{qrUin ? `QQ ${qrUin}` : "QQ"}</span>
+            </div>
+          ) : null}
           <div className="dashBotInline">
-            <input
-              className="fieldInput dashBotInput"
-              value={code}
-              onChange={(e) => setCode(e.target.value)}
-              placeholder="登录 code"
-              disabled={botRunning}
-            />
-            <Button size="sm" variant="ghost" onClick={openQrModal} disabled={botRunning || actionLoading}>
-              扫码获取
+            <Button
+              size="sm"
+              variant="ghost"
+              className="iconBtn"
+              onClick={openQrModal}
+              disabled={botRunning || actionLoading}
+              aria-label="扫码登录"
+              title="扫码登录"
+            >
+              <Icon name="qr" />
             </Button>
             <Button
               size="sm"
               variant={botRunning ? "danger" : "primary"}
-              disabled={actionLoading || (!botRunning && !code)}
-              onClick={toggleBot}
+              disabled={actionLoading}
+              onClick={botRunning ? toggleBot : openStartModal}
             >
               {actionLoading ? (botRunning ? "停止中..." : "启动中...") : botRunning ? "停止" : "启动"}
             </Button>
@@ -549,6 +623,60 @@ export function DashboardPage(): React.JSX.Element {
       </section>
 
       {actionError ? <div className="formError">{actionError}</div> : null}
+
+      {startOpen ? (
+        <div className="modalBack" role="dialog" aria-modal="true" onClick={closeStartModal}>
+          <div className="glass modal" onClick={(e) => e.stopPropagation()}>
+            <div className="modalHead">
+              <div>
+                <div className="modalTitle">启动 bot</div>
+                <div className="modalSub">
+                  <span className="pill">选择平台并输入 code</span>
+                  <span className="muted">启动后会在后台持续运行</span>
+                </div>
+              </div>
+              <Button size="sm" variant="ghost" onClick={closeStartModal}>
+                关闭
+              </Button>
+            </div>
+            <div className="formGrid">
+              <label className="field">
+                <div className="fieldLabel">平台</div>
+                <select
+                  className="fieldInput select"
+                  value={startPlatform}
+                  onChange={(e) => {
+                    const v = e.target.value;
+                    if (v === "qq" || v === "wx") setStartPlatform(v);
+                  }}
+                >
+                  <option value="qq">QQ</option>
+                  <option value="wx">微信</option>
+                </select>
+              </label>
+              <label className="field">
+                <div className="fieldLabel">登录 code</div>
+                <input
+                  className="fieldInput"
+                  value={code}
+                  onChange={(e) => setCode(e.target.value)}
+                  placeholder="请输入登录 code"
+                  disabled={actionLoading}
+                />
+              </label>
+            </div>
+            {startError ? <div className="formError">{startError}</div> : null}
+            <div className="row" style={{ marginTop: 12 }}>
+              <Button size="sm" variant="primary" onClick={submitStart} disabled={actionLoading}>
+                {actionLoading ? "启动中..." : "确认启动"}
+              </Button>
+              <Button size="sm" variant="ghost" onClick={closeStartModal} disabled={actionLoading}>
+                取消
+              </Button>
+            </div>
+          </div>
+        </div>
+      ) : null}
 
       {qrOpen ? (
         <div className="modalBack" role="dialog" aria-modal="true" onClick={closeQrModal}>

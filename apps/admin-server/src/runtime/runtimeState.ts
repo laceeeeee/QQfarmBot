@@ -17,6 +17,7 @@ export type RuntimeConfig = {
   };
   farming?: {
     forceLowestLevelCrop: boolean;
+    forceLatestLevelCrop?: boolean;
     fixedSeedId?: number;
   };
   ui?: {

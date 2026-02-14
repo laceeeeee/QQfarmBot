@@ -221,11 +221,8 @@ export function Shell(props: ShellProps): React.JSX.Element {
             <NavLink to="/seeds" className={({ isActive }) => (isActive ? "navLink active" : "navLink")}>
               种子清单
             </NavLink>
-            <NavLink to="/wallpaper" className={({ isActive }) => (isActive ? "navLink active" : "navLink")}>
-              壁纸
-            </NavLink>
-            <NavLink to="/notifications" className={({ isActive }) => (isActive ? "navLink active" : "navLink")}>
-              通知
+            <NavLink to="/settings" className={({ isActive }) => (isActive ? "navLink active" : "navLink")}>
+              设置
             </NavLink>
             <NavLink to="/about" className={({ isActive }) => (isActive ? "navLink active" : "navLink")}>
               关于
@@ -335,18 +332,11 @@ export function Shell(props: ShellProps): React.JSX.Element {
                   种子清单
                 </NavLink>
                 <NavLink
-                  to="/wallpaper"
+                  to="/settings"
                   className={({ isActive }) => (isActive ? "navLink active" : "navLink")}
                   onClick={() => setNavOpen(false)}
                 >
-                  壁纸
-                </NavLink>
-                <NavLink
-                  to="/notifications"
-                  className={({ isActive }) => (isActive ? "navLink active" : "navLink")}
-                  onClick={() => setNavOpen(false)}
-                >
-                  通知
+                  设置
                 </NavLink>
                 <NavLink
                   to="/about"

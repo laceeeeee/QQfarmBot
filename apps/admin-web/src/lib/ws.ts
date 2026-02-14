@@ -15,6 +15,11 @@ export function useAdminWs(token: string | null): WsState {
   const [connected, setConnected] = useState(false);
   const [lastMessage, setLastMessage] = useState<WsMessage | null>(null);
   const wsRef = useRef<WebSocket | null>(null);
+  const reconnectTimerRef = useRef<number | null>(null);
+  const reconnectAttemptRef = useRef(0);
+  const pingTimerRef = useRef<number | null>(null);
+  const closingRef = useRef(false);
+  const wsUrlRef = useRef<string | null>(null);
 
   const wsUrl = useMemo(() => {
     if (!token) return null;
@@ -23,38 +28,94 @@ export function useAdminWs(token: string | null): WsState {
   }, [token]);
 
   useEffect(() => {
-    if (!wsUrl) return;
-    const ws = new WebSocket(wsUrl);
-    wsRef.current = ws;
-
-    ws.onopen = () => setConnected(true);
-    ws.onclose = () => setConnected(false);
-    ws.onerror = () => setConnected(false);
-    ws.onmessage = (evt) => {
+    wsUrlRef.current = wsUrl;
+    closingRef.current = false;
+    if (!wsUrl) {
+      if (reconnectTimerRef.current !== null) window.clearTimeout(reconnectTimerRef.current);
+      if (pingTimerRef.current !== null) window.clearInterval(pingTimerRef.current);
+      reconnectTimerRef.current = null;
+      pingTimerRef.current = null;
+      reconnectAttemptRef.current = 0;
       try {
-        const msg = JSON.parse(evt.data) as WsMessage;
-        setLastMessage(msg);
+        wsRef.current?.close();
       } catch {
         return;
+      }
+      wsRef.current = null;
+      return;
+    }
+
+    const scheduleReconnect = (): void => {
+      if (!wsUrlRef.current || closingRef.current) return;
+      if (reconnectTimerRef.current !== null) return;
+      const attempt = reconnectAttemptRef.current;
+      const delayMs = Math.min(15_000, 1000 * Math.pow(2, Math.min(attempt, 4)));
+      reconnectTimerRef.current = window.setTimeout(() => {
+        reconnectTimerRef.current = null;
+        reconnectAttemptRef.current = attempt + 1;
+        connect();
+      }, delayMs);
+    };
+
+    const startPing = (ws: WebSocket): void => {
+      if (pingTimerRef.current !== null) window.clearInterval(pingTimerRef.current);
+      pingTimerRef.current = window.setInterval(() => {
+        try {
+          if (ws.readyState !== WebSocket.OPEN) return;
+          ws.send(JSON.stringify({ type: "ping" }));
+        } catch {
+          return;
+        }
+      }, 25_000);
+    };
+
+    const connect = (): void => {
+      if (!wsUrlRef.current || closingRef.current) return;
+      try {
+        const ws = new WebSocket(wsUrlRef.current);
+        wsRef.current = ws;
+
+        ws.onopen = () => {
+          reconnectAttemptRef.current = 0;
+          setConnected(true);
+        };
+        ws.onclose = () => {
+          setConnected(false);
+          scheduleReconnect();
+        };
+        ws.onerror = () => {
+          setConnected(false);
+          scheduleReconnect();
+        };
+        ws.onmessage = (evt) => {
+          try {
+            const msg = JSON.parse(evt.data) as WsMessage;
+            setLastMessage(msg);
+          } catch {
+            return;
+          }
+        };
+
+        startPing(ws);
+      } catch {
+        scheduleReconnect();
       }
     };
 
-    const pingTimer = setInterval(() => {
-      try {
-        if (ws.readyState !== WebSocket.OPEN) return;
-        ws.send(JSON.stringify({ type: "ping" }));
-      } catch {
-        return;
-      }
-    }, 25_000);
+    connect();
 
     return () => {
-      clearInterval(pingTimer);
+      closingRef.current = true;
+      if (reconnectTimerRef.current !== null) window.clearTimeout(reconnectTimerRef.current);
+      if (pingTimerRef.current !== null) window.clearInterval(pingTimerRef.current);
+      reconnectTimerRef.current = null;
+      pingTimerRef.current = null;
       try {
-        ws.close();
+        wsRef.current?.close();
       } catch {
         return;
       }
+      wsRef.current = null;
     };
   }, [wsUrl]);
 

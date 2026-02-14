@@ -8,13 +8,12 @@ import { useData, type LogEntry, type Snapshot } from "./lib/data";
 import { Shell } from "./app/Shell";
 import { LoginPage } from "./pages/LoginPage";
 import { DashboardPage } from "./pages/DashboardPage";
-import { NotificationsPage } from "./pages/NotificationsPage";
 import { LandsPage } from "./pages/LandsPage";
-import { WallpaperPage } from "./pages/WallpaperPage";
 import { SeedsPage } from "./pages/SeedsPage";
 import { BagPage } from "./pages/BagPage";
 import { VisitsPage } from "./pages/VisitsPage";
 import { AboutPage } from "./pages/AboutPage";
+import { SettingsPage } from "./pages/SettingsPage";
 
 export default function App(): React.JSX.Element {
   const auth = useAuth();
@@ -46,7 +45,9 @@ export default function App(): React.JSX.Element {
         path="/settings"
         element={
           <Authed>
-            <Navigate to="/lands" replace />
+            <Shell title="设置">
+              <SettingsPage />
+            </Shell>
           </Authed>
         }
       />
@@ -54,9 +55,7 @@ export default function App(): React.JSX.Element {
         path="/notifications"
         element={
           <Authed>
-            <Shell title="通知">
-              <NotificationsPage />
-            </Shell>
+            <Navigate to="/settings" replace />
           </Authed>
         }
       />
@@ -74,9 +73,7 @@ export default function App(): React.JSX.Element {
         path="/wallpaper"
         element={
           <Authed>
-            <Shell title="壁纸">
-              <WallpaperPage />
-            </Shell>
+            <Navigate to="/settings" replace />
           </Authed>
         }
       />
