@@ -17,8 +17,8 @@
   },
   "farming": {
     "forceLowestLevelCrop": false,
-    "forceLatestLevelCrop": false,
-    "fixedSeedId": 20059
+    "forceLatestLevelCrop": true,
+    "disableAutoRecommend": true
   },
   "smtp": {
     "enabled": false,

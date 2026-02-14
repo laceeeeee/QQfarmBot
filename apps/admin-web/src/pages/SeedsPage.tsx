@@ -24,6 +24,25 @@ type SeedListReply = {
   updatedAtMs: number;
 };
 
+function useIsNarrow(maxWidthPx: number): boolean {
+  const [ok, setOk] = useState(() => {
+    if (typeof window === "undefined") return false;
+    return window.matchMedia?.(`(max-width: ${maxWidthPx}px)`)?.matches ?? false;
+  });
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const mql = window.matchMedia?.(`(max-width: ${maxWidthPx}px)`);
+    if (!mql) return;
+    const onChange = () => setOk(mql.matches);
+    onChange();
+    mql.addEventListener?.("change", onChange);
+    return () => mql.removeEventListener?.("change", onChange);
+  }, [maxWidthPx]);
+
+  return ok;
+}
+
 /**
  * 将秒数转为更可读的中文时间。
  */
@@ -46,6 +65,7 @@ export function SeedsPage(): React.JSX.Element {
     "name" | "seedId" | "plantId" | "landLevelNeed" | "seasons" | "exp" | "fruitId" | "totalGrowSec"
   >("seedId");
   const [sortDir, setSortDir] = useState<"asc" | "desc">("asc");
+  const isNarrow = useIsNarrow(720);
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -180,36 +200,65 @@ export function SeedsPage(): React.JSX.Element {
 
           {error ? <div className="formError">{error}</div> : null}
 
-          <div className="seedsTableWrap">
-            <table className="seedsTable">
-              <thead>
-                <tr>
-                  <SortTh label="作物名" k="name" />
-                  <SortTh label="seed_id" k="seedId" align="right" />
-                  <SortTh label="plant_id" k="plantId" align="right" />
-                  <SortTh label="地块等级" k="landLevelNeed" align="right" />
-                  <SortTh label="季数" k="seasons" align="right" />
-                  <SortTh label="经验" k="exp" align="right" />
-                  <SortTh label="果实" k="fruitId" align="right" />
-                  <SortTh label="总时长" k="totalGrowSec" align="right" />
-                </tr>
-              </thead>
-              <tbody>
-                {sortedItems.map((x) => (
-                  <tr key={`${x.seedId}-${x.plantId}`}>
-                    <td className="tdName">{x.name}</td>
-                    <td className="tdNum">{x.seedId}</td>
-                    <td className="tdNum">{x.plantId}</td>
-                    <td className="tdNum">{x.landLevelNeed}</td>
-                    <td className="tdNum">{x.seasons}</td>
-                    <td className="tdNum">{x.exp}</td>
-                    <td className="tdNum">{x.fruitId == null ? "—" : x.fruitCount ?? "—"}</td>
-                    <td className="tdNum">{formatDurationSec(x.totalGrowSec)}</td>
+          {isNarrow ? (
+            <div className="mobileCards">
+              {sortedItems.length ? (
+                sortedItems.map((x) => (
+                  <div className="mobileCard" key={`${x.seedId}-${x.plantId}`}>
+                    <div className="mobileCardTop">
+                      <div className="mobileCardTitle">{x.name}</div>
+                      <div className="mobileCardRight mono">经验 {x.exp}</div>
+                    </div>
+                    <div className="mobileCardMeta">
+                      <span className="chip mono">Seed {x.seedId}</span>
+                      <span className="chip mono">Plant {x.plantId}</span>
+                      <span className="chip mono">地块 Lv.{x.landLevelNeed}</span>
+                      <span className="chip mono">季数 {x.seasons}</span>
+                      <span className="chip mono">总时长 {formatDurationSec(x.totalGrowSec)}</span>
+                      {x.fruitId == null ? (
+                        <span className="chip mono">果实 —</span>
+                      ) : (
+                        <span className="chip mono">果实 {x.fruitId} ×{x.fruitCount ?? "—"}</span>
+                      )}
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <div className="mobileEmpty muted">暂无数据</div>
+              )}
+            </div>
+          ) : (
+            <div className="seedsTableWrap">
+              <table className="seedsTable">
+                <thead>
+                  <tr>
+                    <SortTh label="作物名" k="name" />
+                    <SortTh label="seed_id" k="seedId" align="right" />
+                    <SortTh label="plant_id" k="plantId" align="right" />
+                    <SortTh label="地块等级" k="landLevelNeed" align="right" />
+                    <SortTh label="季数" k="seasons" align="right" />
+                    <SortTh label="经验" k="exp" align="right" />
+                    <SortTh label="果实" k="fruitId" align="right" />
+                    <SortTh label="总时长" k="totalGrowSec" align="right" />
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                </thead>
+                <tbody>
+                  {sortedItems.map((x) => (
+                    <tr key={`${x.seedId}-${x.plantId}`}>
+                      <td className="tdName">{x.name}</td>
+                      <td className="tdNum">{x.seedId}</td>
+                      <td className="tdNum">{x.plantId}</td>
+                      <td className="tdNum">{x.landLevelNeed}</td>
+                      <td className="tdNum">{x.seasons}</td>
+                      <td className="tdNum">{x.exp}</td>
+                      <td className="tdNum">{x.fruitId == null ? "—" : x.fruitCount ?? "—"}</td>
+                      <td className="tdNum">{formatDurationSec(x.totalGrowSec)}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
         </GlassCard>
       </div>
     </div>

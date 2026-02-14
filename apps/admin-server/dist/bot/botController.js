@@ -20,6 +20,7 @@ export class BotController {
     userPollTimer = null;
     fatalWs400Triggered = false;
     patrolDisconnectTriggered = false;
+    kickoutTriggered = false;
     levelExpStarts = null;
     lifecycle = Promise.resolve();
     friendControl = null;
@@ -246,6 +247,7 @@ export class BotController {
             botConfig.autoSell = automation.autoSell;
             botConfig.forceLowestLevelCrop = farming.forceLowestLevelCrop;
             botConfig.forceLatestLevelCrop = Boolean(farming.forceLatestLevelCrop);
+            botConfig.disableAutoRecommend = Boolean(farming.disableAutoRecommend);
             botConfig.fixedSeedId = typeof farming.fixedSeedId === "number" ? farming.fixedSeedId : undefined;
             const wantFriendFarm = Boolean(automation.autoFriendFarm);
             if (this.status.running && this.friendControl && wantFriendFarm !== this.friendFarmEnabled) {
@@ -272,6 +274,7 @@ export class BotController {
                     farming: {
                         forceLowestLevelCrop: farming.forceLowestLevelCrop,
                         forceLatestLevelCrop: Boolean(farming.forceLatestLevelCrop),
+                        disableAutoRecommend: Boolean(farming.disableAutoRecommend),
                         fixedSeedId: farming.fixedSeedId ?? null,
                     },
                 },
@@ -459,6 +462,20 @@ export class BotController {
         await this.stopInternal();
         this.fatalWs400Triggered = false;
         this.patrolDisconnectTriggered = false;
+        this.kickoutTriggered = false;
+        const req = this.require;
+        const clearModuleCache = (modulePath) => {
+            try {
+                const resolved = req.resolve ? req.resolve(modulePath) : modulePath;
+                if (req.cache && req.cache[resolved])
+                    delete req.cache[resolved];
+            }
+            catch {
+                return;
+            }
+        };
+        clearModuleCache(path.join(this.projectRoot, "src", "farm.js"));
+        clearModuleCache(path.join(this.projectRoot, "src", "gameConfig.js"));
         const configMod = this.require(path.join(this.projectRoot, "src", "config.js"));
         const networkMod = this.require(path.join(this.projectRoot, "src", "network.js"));
         const protoMod = this.require(path.join(this.projectRoot, "src", "proto.js"));
@@ -506,6 +523,11 @@ export class BotController {
             await this.logBuffer.append({ level, scope: payload.tag, message: payload.message });
             if (!this.status.running)
                 return;
+            if (payload.message.includes("被踢下线") ||
+                payload.message.includes("连接关闭") ||
+                payload.message.includes("已在其他终端登录")) {
+                void this.handleKickoutOrDisconnect(payload.message);
+            }
             if (payload.message.includes("Unexpected server response: 400")) {
                 void this.handleFatalWs400(payload.message);
             }
@@ -595,11 +617,13 @@ export class BotController {
                 this.status.connected = false;
                 const code = typeof closeCode === "number" ? closeCode : -1;
                 this.status.lastError = `[WS] 连接关闭 (code=${code})`;
+                const msg = `[WS] 连接关闭 (code=${code}) ${hint}`;
                 void this.logBuffer.append({
                     level: code === 1000 ? "info" : "warn",
                     scope: "WS",
-                    message: `[WS] 连接关闭 (code=${code}) ${hint}`,
+                    message: msg,
                 });
+                void this.handleKickoutOrDisconnect(msg);
                 try {
                     this.onWsClosed?.();
                 }
@@ -698,6 +722,19 @@ export class BotController {
         });
         await this.stop();
         await this.sendSmtpAlert("Bot 已停止：连接未打开", `检测到巡查失败：${msg}\n系统判断连接已断开，已停止 bot。请检查网络/重新登录后再启动。`);
+    }
+    async handleKickoutOrDisconnect(msg) {
+        if (this.kickoutTriggered)
+            return;
+        this.kickoutTriggered = true;
+        this.status.lastError = msg;
+        await this.logBuffer.append({
+            level: "error",
+            scope: "系统",
+            message: "检测到异常下线/连接关闭，已立即停止 bot 并尝试发送邮件通知",
+        });
+        await this.stop();
+        await this.sendSmtpAlert("Bot 已停止：异常下线", `检测到异常下线或连接关闭：${msg}\n已停止 bot。请确认是否在其他终端登录或网络异常。`);
     }
     async sendSmtpAlert(subject, text) {
         try {

@@ -356,17 +356,21 @@ async function findBestSeed(landsCount) {
         return available[0];
     }
 
-    try {
-        log('商店', `等级: ${state.level}，土地数量: ${landsCount}`);
+    if (!CONFIG.disableAutoRecommend) {
+        try {
+            log('商店', `等级: ${state.level}，土地数量: ${landsCount}`);
 
-        const rec = getPlantingRecommendation(state.level, landsCount == null ? 18 : landsCount, { top: 50 });
-        const rankedSeedIds = rec.candidatesNormalFert.map(x => x.seedId);
-        for (const seedId of rankedSeedIds) {
-            const hit = available.find(x => x.seedId === seedId);
-            if (hit) return hit;
+            const rec = getPlantingRecommendation(state.level, landsCount == null ? 18 : landsCount, { top: 50 });
+            const rankedSeedIds = rec.candidatesNormalFert.map(x => x.seedId);
+            for (const seedId of rankedSeedIds) {
+                const hit = available.find(x => x.seedId === seedId);
+                if (hit) return hit;
+            }
+        } catch (e) {
+            logWarn('商店', `经验效率推荐失败，使用兜底策略: ${e.message}`);
         }
-    } catch (e) {
-        logWarn('商店', `经验效率推荐失败，使用兜底策略: ${e.message}`);
+    } else {
+        log('商店', '已禁用自动推荐，使用兜底策略');
     }
 
     if (state.level && state.level <= 28) {

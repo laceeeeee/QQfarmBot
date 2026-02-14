@@ -29,6 +29,7 @@ const StoredRuntimeConfigSchema = z.object({
         .object({
         forceLowestLevelCrop: z.boolean(),
         forceLatestLevelCrop: z.boolean().optional(),
+        disableAutoRecommend: z.boolean().optional(),
         fixedSeedId: z.number().int().min(1).max(1_000_000_000).optional(),
     })
         .optional(),
@@ -131,7 +132,7 @@ export class ConfigStore {
             ...storedAutomation,
             autoFriendFarm: storedAutomation.autoFriendFarm ?? true,
         };
-        const farming = stored.farming ?? { forceLowestLevelCrop: false, forceLatestLevelCrop: false };
+        const farming = stored.farming ?? { forceLowestLevelCrop: false, forceLatestLevelCrop: false, disableAutoRecommend: false };
         return {
             platform: stored.platform,
             selfIntervalSecMin: stored.selfIntervalSecMin,
@@ -142,6 +143,7 @@ export class ConfigStore {
             farming: {
                 forceLowestLevelCrop: Boolean(farming.forceLowestLevelCrop),
                 forceLatestLevelCrop: Boolean(farming.forceLatestLevelCrop),
+                disableAutoRecommend: Boolean(farming.disableAutoRecommend),
                 fixedSeedId: farming.fixedSeedId,
             },
             ui,
@@ -180,7 +182,7 @@ export class ConfigStore {
                 autoTask: true,
                 autoSell: true,
             },
-            farming: { forceLowestLevelCrop: false, forceLatestLevelCrop: false },
+            farming: { forceLowestLevelCrop: false, forceLatestLevelCrop: false, disableAutoRecommend: false },
             ui: { wallpaper: { sync: true, mode: "local" } },
         };
         const raw = await readJsonFile(this.filePath, fallback);
@@ -209,7 +211,7 @@ export class ConfigStore {
                 autoTask: true,
                 autoSell: true,
             },
-            farming: { forceLowestLevelCrop: false, forceLatestLevelCrop: false },
+            farming: { forceLowestLevelCrop: false, forceLatestLevelCrop: false, disableAutoRecommend: false },
             ui: { wallpaper: { sync: true, mode: "local" } },
         };
         const raw = await readJsonFile(this.filePath, fallback);
@@ -237,6 +239,7 @@ export class ConfigStore {
                 ? {
                     forceLowestLevelCrop: parsed.farming.forceLowestLevelCrop,
                     forceLatestLevelCrop: parsed.farming.forceLatestLevelCrop ?? current.farming?.forceLatestLevelCrop ?? false,
+                    disableAutoRecommend: parsed.farming.disableAutoRecommend ?? current.farming?.disableAutoRecommend ?? false,
                     fixedSeedId: parsed.farming.fixedSeedId,
                 }
                 : current.farming,

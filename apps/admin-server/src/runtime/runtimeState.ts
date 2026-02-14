@@ -18,6 +18,7 @@ export type RuntimeConfig = {
   farming?: {
     forceLowestLevelCrop: boolean;
     forceLatestLevelCrop?: boolean;
+    disableAutoRecommend?: boolean;
     fixedSeedId?: number;
   };
   ui?: {

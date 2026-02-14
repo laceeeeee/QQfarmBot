@@ -121,6 +121,19 @@ export function DashboardPage(): React.JSX.Element {
   const [startError, setStartError] = useState<string | null>(null);
 
   const botRunning = Boolean(snapshot?.bot?.running);
+  const qrUserKey = "farm-qr-user";
+
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem(qrUserKey);
+      if (!raw) return;
+      const parsed = JSON.parse(raw) as { uin?: string; avatar?: string };
+      if (typeof parsed.uin === "string" && parsed.uin) setQrUin(parsed.uin);
+      if (typeof parsed.avatar === "string" && parsed.avatar) setQrAvatar(parsed.avatar);
+    } catch {
+      return;
+    }
+  }, [qrUserKey]);
 
   /**
    * 高亮更新值，并在相邻位置显示 +N 的动效。
@@ -195,8 +208,19 @@ export function DashboardPage(): React.JSX.Element {
           stopQrPolling();
           return;
         }
-        setQrUin(typeof data.uin === "string" && data.uin ? data.uin : null);
-        setQrAvatar(typeof data.avatar === "string" && data.avatar ? data.avatar : null);
+        const nextUin = typeof data.uin === "string" && data.uin ? data.uin : null;
+        const nextAvatar = typeof data.avatar === "string" && data.avatar ? data.avatar : null;
+        setQrUin(nextUin);
+        setQrAvatar(nextAvatar);
+        try {
+          if (nextUin || nextAvatar) {
+            localStorage.setItem(qrUserKey, JSON.stringify({ uin: nextUin, avatar: nextAvatar }));
+          } else {
+            localStorage.removeItem(qrUserKey);
+          }
+        } catch {
+          return;
+        }
         const nextCode = data.code;
         setCode(nextCode);
         setQrStatus("登录成功，正在启动 bot...");
@@ -377,6 +401,11 @@ export function DashboardPage(): React.JSX.Element {
     setStartError(null);
     setQrUin(null);
     setQrAvatar(null);
+    try {
+      localStorage.removeItem(qrUserKey);
+    } catch {
+      return;
+    }
     setStartOpen(true);
   }
 
@@ -626,7 +655,7 @@ export function DashboardPage(): React.JSX.Element {
 
       {startOpen ? (
         <div className="modalBack" role="dialog" aria-modal="true" onClick={closeStartModal}>
-          <div className="glass modal" onClick={(e) => e.stopPropagation()}>
+          <div className="glass modal startModal" onClick={(e) => e.stopPropagation()}>
             <div className="modalHead">
               <div>
                 <div className="modalTitle">启动 bot</div>
@@ -642,17 +671,26 @@ export function DashboardPage(): React.JSX.Element {
             <div className="formGrid">
               <label className="field">
                 <div className="fieldLabel">平台</div>
-                <select
-                  className="fieldInput select"
-                  value={startPlatform}
-                  onChange={(e) => {
-                    const v = e.target.value;
-                    if (v === "qq" || v === "wx") setStartPlatform(v);
-                  }}
-                >
-                  <option value="qq">QQ</option>
-                  <option value="wx">微信</option>
-                </select>
+                <div className="seg startPlatformSeg" role="tablist" aria-label="平台选择">
+                  <button
+                    className={startPlatform === "qq" ? "segBtn active" : "segBtn"}
+                    onClick={() => setStartPlatform("qq")}
+                    type="button"
+                    role="tab"
+                    aria-selected={startPlatform === "qq"}
+                  >
+                    QQ
+                  </button>
+                  <button
+                    className={startPlatform === "wx" ? "segBtn active" : "segBtn"}
+                    onClick={() => setStartPlatform("wx")}
+                    type="button"
+                    role="tab"
+                    aria-selected={startPlatform === "wx"}
+                  >
+                    微信
+                  </button>
+                </div>
               </label>
               <label className="field">
                 <div className="fieldLabel">登录 code</div>
@@ -666,7 +704,7 @@ export function DashboardPage(): React.JSX.Element {
               </label>
             </div>
             {startError ? <div className="formError">{startError}</div> : null}
-            <div className="row" style={{ marginTop: 12 }}>
+            <div className="row startModalActions" style={{ marginTop: 12 }}>
               <Button size="sm" variant="primary" onClick={submitStart} disabled={actionLoading}>
                 {actionLoading ? "启动中..." : "确认启动"}
               </Button>

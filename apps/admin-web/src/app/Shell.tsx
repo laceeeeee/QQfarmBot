@@ -4,6 +4,7 @@ import { Link, NavLink } from "react-router-dom";
 import { useAuth } from "../lib/auth";
 import { useData } from "../lib/data";
 import { apiFetch, type ApiError } from "../lib/api";
+import { formatBytes, formatDateTime, formatUptime } from "../lib/format";
 import { Button } from "../ui/Button";
 
 type ShellProps = {
@@ -30,6 +31,7 @@ export function Shell(props: ShellProps): React.JSX.Element {
   const [shutdownError, setShutdownError] = useState<string | null>(null);
   const [navOpen, setNavOpen] = useState(false);
   const [alphaOpen, setAlphaOpen] = useState(false);
+  const [statusOpen, setStatusOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(() => {
     if (typeof window === "undefined") return false;
     return window.matchMedia?.("(max-width: 980px)")?.matches ?? false;
@@ -77,12 +79,34 @@ export function Shell(props: ShellProps): React.JSX.Element {
   }, [alphaOpen]);
 
   useEffect(() => {
+    if (!statusOpen) return;
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setStatusOpen(false);
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [statusOpen]);
+
+  useEffect(() => {
+    if (!isMobile) setStatusOpen(false);
+  }, [isMobile]);
+
+  useEffect(() => {
     if (fatalWs400.active) return;
     if (!snapshot?.bot?.startedAt) return;
     const top = data.logs[data.logs.length - 1];
     if (!top) return;
     if (top.message.includes("Unexpected server response: 400")) setFatalWs400({ active: true, msg: top.message });
   }, [data.logs, fatalWs400.active, snapshot?.bot?.startedAt]);
+
+  const user = snapshot?.bot?.user;
+  const expProgress = user?.expProgress;
+
+  const formatGold = (v: number | null | undefined): string => {
+    const n = typeof v === "number" ? v : NaN;
+    if (!Number.isFinite(n)) return "—";
+    return Math.floor(n).toLocaleString();
+  };
 
   useEffect(() => {
     let cancelled = false;
@@ -190,6 +214,12 @@ export function Shell(props: ShellProps): React.JSX.Element {
     } finally {
       setShutdownLoading(false);
     }
+  }
+
+  function requestShutdown(): void {
+    if (shutdownLoading) return;
+    if (!window.confirm("确认退出程序？退出后需要手动重启服务。")) return;
+    void shutdownApp();
   }
 
   return (
@@ -371,36 +401,41 @@ export function Shell(props: ShellProps): React.JSX.Element {
                 ) : null}
                 <div className="topbarH">{props.title ?? "控制台"}</div>
               </div>
-              <div className="topbarHint">
-                {isMobile ? (
-                  <button className="chip chipBtn" onClick={() => setAlphaOpen(true)}>
-                    <span className="dot dot-accent" />
-                    <span className="mono">透明度 {Math.round(glassAlpha * 100)}%</span>
-                  </button>
-                ) : null}
-                <span className="chip">
-                  <span className={snapshot?.bot?.connected ? "dot dot-accent" : "dot dot-danger"} />
-                  <span>{snapshot?.bot?.connected ? "已连接" : "未连接"}</span>
-                </span>
-                <span className="chip">
-                  <span className="dot dot-blue" />
-                  <span>WS {snapshot?.stats.wsClients ?? 0}</span>
-                </span>
-                <span className="chip">
-                  <span className={snapshot?.bot?.running ? "dot dot-warn" : "dot dot-danger"} />
-                  <span>{snapshot?.bot?.running ? "RUNNING" : "STOPPED"}</span>
-                </span>
-                <Button variant="danger" size="sm" onClick={shutdownApp} disabled={shutdownLoading}>
-                  {shutdownLoading ? "退出中..." : "退出程序"}
-                </Button>
-                {shutdownError ? <span className="chip">{shutdownError}</span> : null}
-              </div>
+              {!isMobile ? (
+                <div className="topbarHint">
+                  <span className="chip">
+                    <span className={snapshot?.bot?.connected ? "dot dot-accent" : "dot dot-danger"} />
+                    <span>{snapshot?.bot?.connected ? "已连接" : "未连接"}</span>
+                  </span>
+                  <span className="chip">
+                    <span className="dot dot-blue" />
+                    <span>WS {snapshot?.stats.wsClients ?? 0}</span>
+                  </span>
+                  <span className="chip">
+                    <span className={snapshot?.bot?.running ? "dot dot-warn" : "dot dot-danger"} />
+                    <span>{snapshot?.bot?.running ? "RUNNING" : "STOPPED"}</span>
+                  </span>
+                  <div className="topbarShutdown">
+                    <Button variant="danger" size="sm" onClick={requestShutdown} disabled={shutdownLoading}>
+                      {shutdownLoading ? "退出中..." : "退出程序"}
+                    </Button>
+                  </div>
+                  {shutdownError ? <span className="chip">{shutdownError}</span> : null}
+                </div>
+              ) : null}
             </div>
           </header>
 
           <div className="content">{props.children}</div>
         </main>
       </div>
+
+      {isMobile ? (
+        <button className="glass floatingStatusBtn" onClick={() => setStatusOpen(true)} aria-label="查看状态参数">
+          <span className={snapshot?.bot?.running ? "dot dot-accent" : "dot dot-danger"} />
+          <span>状态</span>
+        </button>
+      ) : null}
 
       {fatalWs400.active ? (
         <div className="fatalOverlay" role="dialog" aria-modal="true">
@@ -456,6 +491,110 @@ export function Shell(props: ShellProps): React.JSX.Element {
                 value={Math.round(glassAlpha * 100)}
                 onChange={(e) => setGlassAlpha(Number(e.target.value) / 100)}
               />
+            </div>
+          </div>
+        </div>
+      ) : null}
+
+      {isMobile && statusOpen ? (
+        <div className="modalBack" role="dialog" aria-modal="true" onClick={() => setStatusOpen(false)}>
+          <div className="glass statusModal" onClick={(e) => e.stopPropagation()}>
+            <div className="statusModalHead">
+              <div>
+                <div className="modalTitle">运行状态</div>
+                <div className="modalSub">
+                  <span className="chip mono">{snapshot ? `更新时间 ${formatDateTime(snapshot.ts)}` : "等待数据推送..."}</span>
+                  <span className="muted">移动端快捷查看</span>
+                </div>
+              </div>
+              <Button size="sm" variant="ghost" onClick={() => setStatusOpen(false)}>
+                关闭
+              </Button>
+            </div>
+            <div className="stats statsCompact statusStats">
+              <div className="stat">
+                <div className="statK">连接状态</div>
+                <div className="statV">
+                  <span className={snapshot?.bot?.connected ? "miniPill ok" : "miniPill off"}>
+                    {snapshot?.bot?.connected ? "已连接" : "未连接"}
+                  </span>
+                </div>
+              </div>
+              <div className="stat">
+                <div className="statK">WS 客户端</div>
+                <div className="statV">{snapshot?.stats.wsClients ?? 0}</div>
+              </div>
+              <div className="stat">
+                <div className="statK">运行状态</div>
+                <div className="statV">
+                  <span className={snapshot?.bot?.running ? "miniPill ok" : "miniPill off"}>
+                    {snapshot?.bot?.running ? "RUNNING" : "STOPPED"}
+                  </span>
+                </div>
+              </div>
+              <div className="stat">
+                <div className="statK">运行平台</div>
+                <div className="statV">{snapshot?.bot?.platform === "wx" ? "微信" : "QQ"}</div>
+              </div>
+              <div className="stat">
+                <div className="statK">运行时长</div>
+                <div className="statV">{snapshot ? formatUptime(snapshot.stats.uptimeSec) : "—"}</div>
+              </div>
+              <div className="stat">
+                <div className="statK">启动时间</div>
+                <div className="statV">{snapshot?.bot?.startedAt ? formatDateTime(snapshot.bot.startedAt) : "—"}</div>
+              </div>
+              <div className="stat">
+                <div className="statK">内存 RSS</div>
+                <div className="statV">{snapshot ? formatBytes(snapshot.stats.memoryRss) : "—"}</div>
+              </div>
+              <div className="stat">
+                <div className="statK">Heap Used</div>
+                <div className="statV">{snapshot ? formatBytes(snapshot.stats.heapUsed) : "—"}</div>
+              </div>
+              <div className="stat">
+                <div className="statK">Heap Total</div>
+                <div className="statV">{snapshot ? formatBytes(snapshot.stats.heapTotal) : "—"}</div>
+              </div>
+              <div className="stat">
+                <div className="statK">账号</div>
+                <div className="statV">{user ? `${user.name} · Lv.${user.level}` : "—"}</div>
+              </div>
+              <div className="stat">
+                <div className="statK">GID</div>
+                <div className="statV">{user?.gid ?? "—"}</div>
+              </div>
+              <div className="stat">
+                <div className="statK">金币</div>
+                <div className="statV">{user ? formatGold(user.gold) : "—"}</div>
+              </div>
+              <div className="stat">
+                <div className="statK">经验进度</div>
+                <div className="statV">
+                  {!user
+                    ? "—"
+                    : expProgress == null
+                      ? `经验 ${formatGold(user.exp)}`
+                      : `还差 ${Math.max(0, Math.floor(expProgress.needed - expProgress.current))} 点`}
+                </div>
+              </div>
+              <div className="stat">
+                <div className="statK">透明度</div>
+                <div className="statV">
+                  <div className="row">
+                    <span className="mono">{Math.round(glassAlpha * 100)}%</span>
+                    <button
+                      className="chip chipBtn"
+                      onClick={() => {
+                        setStatusOpen(false);
+                        setAlphaOpen(true);
+                      }}
+                    >
+                      调整
+                    </button>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </div>

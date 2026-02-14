@@ -29,6 +29,7 @@ type Config = {
   farming?: {
     forceLowestLevelCrop: boolean;
     forceLatestLevelCrop?: boolean;
+    disableAutoRecommend?: boolean;
     fixedSeedId?: number;
   };
 };
@@ -112,7 +113,7 @@ export function LandsPage(): React.JSX.Element {
     autoTask: true,
     autoSell: true,
   };
-  const effectiveFarming = snapshot?.config?.farming ?? loadedConfig?.farming ?? { forceLowestLevelCrop: false, forceLatestLevelCrop: false };
+  const effectiveFarming = (snapshot?.config?.farming ?? loadedConfig?.farming ?? { forceLowestLevelCrop: false, forceLatestLevelCrop: false, disableAutoRecommend: false }) as Farming;
 
   const [autoHarvest, setAutoHarvest] = useState(Boolean(effectiveAutomation.autoHarvest));
   const [autoFertilize, setAutoFertilize] = useState(Boolean(effectiveAutomation.autoFertilize));
@@ -126,6 +127,7 @@ export function LandsPage(): React.JSX.Element {
 
   const [forceLowestLevelCrop, setForceLowestLevelCrop] = useState(Boolean(effectiveFarming.forceLowestLevelCrop));
   const [forceLatestLevelCrop, setForceLatestLevelCrop] = useState(Boolean(effectiveFarming.forceLatestLevelCrop));
+  const [disableAutoRecommend, setDisableAutoRecommend] = useState(Boolean(effectiveFarming.disableAutoRecommend));
   const [fixedSeedId, setFixedSeedId] = useState<number | "">(
     typeof effectiveFarming.fixedSeedId === "number" ? effectiveFarming.fixedSeedId : ""
   );
@@ -154,6 +156,7 @@ export function LandsPage(): React.JSX.Element {
       const nextFarming: Farming = {
         forceLowestLevelCrop: overrides?.farming?.forceLowestLevelCrop ?? forceLowestLevelCrop,
         forceLatestLevelCrop: overrides?.farming?.forceLatestLevelCrop ?? forceLatestLevelCrop,
+        disableAutoRecommend: overrides?.farming?.disableAutoRecommend ?? disableAutoRecommend,
         fixedSeedId: seedId == null ? undefined : seedId,
       };
 
@@ -180,6 +183,7 @@ export function LandsPage(): React.JSX.Element {
       fixedSeedId,
       forceLowestLevelCrop,
       forceLatestLevelCrop,
+      disableAutoRecommend,
       friendIntervalSecMax,
       friendIntervalSecMin,
       platform,
@@ -228,7 +232,7 @@ export function LandsPage(): React.JSX.Element {
           autoTask: true,
           autoSell: true,
         };
-        const f = res.config.farming ?? { forceLowestLevelCrop: false, forceLatestLevelCrop: false };
+        const f = res.config.farming ?? { forceLowestLevelCrop: false, forceLatestLevelCrop: false, disableAutoRecommend: false };
         setAutoHarvest(Boolean(a.autoHarvest));
         setAutoFertilize(Boolean(a.autoFertilize));
         setAutoWater(Boolean(a.autoWater));
@@ -240,6 +244,7 @@ export function LandsPage(): React.JSX.Element {
         setAutoSell(Boolean(a.autoSell));
         setForceLowestLevelCrop(Boolean(f.forceLowestLevelCrop));
         setForceLatestLevelCrop(Boolean(f.forceLatestLevelCrop));
+        setDisableAutoRecommend(Boolean(f.disableAutoRecommend));
         setFixedSeedId(typeof f.fixedSeedId === "number" ? f.fixedSeedId : "");
         setDirty(false);
         setOk("已保存");
@@ -288,7 +293,7 @@ export function LandsPage(): React.JSX.Element {
         autoTask: true,
         autoSell: true,
       };
-      const f = res.config.farming ?? { forceLowestLevelCrop: false, forceLatestLevelCrop: false };
+      const f = res.config.farming ?? { forceLowestLevelCrop: false, forceLatestLevelCrop: false, disableAutoRecommend: false };
       setAutoHarvest(Boolean(a.autoHarvest));
       setAutoFertilize(Boolean(a.autoFertilize));
       setAutoWater(Boolean(a.autoWater));
@@ -300,6 +305,7 @@ export function LandsPage(): React.JSX.Element {
       setAutoSell(Boolean(a.autoSell));
       setForceLowestLevelCrop(Boolean(f.forceLowestLevelCrop));
       setForceLatestLevelCrop(Boolean(f.forceLatestLevelCrop));
+      setDisableAutoRecommend(Boolean(f.disableAutoRecommend));
       setFixedSeedId(typeof f.fixedSeedId === "number" ? f.fixedSeedId : "");
     } catch (e: unknown) {
       const err = e as ApiError;
@@ -361,12 +367,13 @@ export function LandsPage(): React.JSX.Element {
   }, [dirty, loadedConfig, saving, snapshot?.config?.automation]);
 
   useEffect(() => {
-    const f = snapshot?.config?.farming;
+    const f = snapshot?.config?.farming as Farming | undefined;
     if (!f) return;
     if (loadedConfig) return;
     if (dirty || saving) return;
     setForceLowestLevelCrop(Boolean(f.forceLowestLevelCrop));
     setForceLatestLevelCrop(Boolean(f.forceLatestLevelCrop));
+    setDisableAutoRecommend(Boolean(f.disableAutoRecommend));
     setFixedSeedId(typeof f.fixedSeedId === "number" ? f.fixedSeedId : "");
   }, [dirty, loadedConfig, saving, snapshot?.config?.farming]);
 
@@ -750,7 +757,7 @@ export function LandsPage(): React.JSX.Element {
 
           <div className="divider" />
 
-          <div className="formGrid">
+          <div className="formGrid four-cols">
             <label className="field">
               <div className="fieldLabel">固定最低等级作物</div>
               <select
@@ -758,26 +765,18 @@ export function LandsPage(): React.JSX.Element {
                 value={forceLowestLevelCrop ? "on" : "off"}
                 onChange={(e) => {
                   const next = e.target.value === "on";
+                  setForceLowestLevelCrop(next);
+                  setDirty(true);
                   if (next) {
-                    const hasLatest = forceLatestLevelCrop;
-                    const hasFixed = fixedSeedId !== "";
-                    if (hasLatest || hasFixed) {
-                      const ok = window.confirm("开启“固定最低等级作物”会关闭“只种最新等级作物”和“指定种子”。是否继续？");
-                      if (!ok) return;
-                    }
-                    if (forceLatestLevelCrop) setForceLatestLevelCrop(false);
-                    if (fixedSeedId !== "") setFixedSeedId("");
-                    setForceLowestLevelCrop(true);
-                    setDirty(true);
+                    setForceLatestLevelCrop(false);
+                    setFixedSeedId("");
                     void saveWithOverrides({
                       farming: { forceLowestLevelCrop: true, forceLatestLevelCrop: false },
                       fixedSeedIdRaw: "",
                     });
-                    return;
+                  } else {
+                    void saveWithOverrides({ farming: { forceLowestLevelCrop: false } });
                   }
-                  setForceLowestLevelCrop(false);
-                  setDirty(true);
-                  void saveWithOverrides({ farming: { forceLowestLevelCrop: false } });
                 }}
               >
                 <option value="off">关闭</option>
@@ -793,32 +792,42 @@ export function LandsPage(): React.JSX.Element {
                 value={forceLatestLevelCrop ? "on" : "off"}
                 onChange={(e) => {
                   const next = e.target.value === "on";
+                  setForceLatestLevelCrop(next);
+                  setDirty(true);
                   if (next) {
-                    const hasLowest = forceLowestLevelCrop;
-                    const hasFixed = fixedSeedId !== "";
-                    if (hasLowest || hasFixed) {
-                      const ok = window.confirm("开启“只种最新等级作物”会关闭“固定最低等级作物”和“指定种子”。是否继续？");
-                      if (!ok) return;
-                    }
-                    if (forceLowestLevelCrop) setForceLowestLevelCrop(false);
-                    if (fixedSeedId !== "") setFixedSeedId("");
-                    setForceLatestLevelCrop(true);
-                    setDirty(true);
+                    setForceLowestLevelCrop(false);
+                    setFixedSeedId("");
                     void saveWithOverrides({
                       farming: { forceLowestLevelCrop: false, forceLatestLevelCrop: true },
                       fixedSeedIdRaw: "",
                     });
-                    return;
+                  } else {
+                    void saveWithOverrides({ farming: { forceLatestLevelCrop: false } });
                   }
-                  setForceLatestLevelCrop(false);
-                  setDirty(true);
-                  void saveWithOverrides({ farming: { forceLatestLevelCrop: false } });
                 }}
               >
                 <option value="off">关闭</option>
                 <option value="on">开启</option>
               </select>
               <div className="fieldHint">开启后固定选择当前等级最新解锁的作物。</div>
+            </label>
+
+            <label className="field">
+              <div className="fieldLabel">禁用自动推荐</div>
+              <select
+                className="fieldInput select"
+                value={disableAutoRecommend ? "on" : "off"}
+                onChange={(e) => {
+                  const next = e.target.value === "on";
+                  setDisableAutoRecommend(next);
+                  setDirty(true);
+                  void saveWithOverrides({ farming: { disableAutoRecommend: next } });
+                }}
+              >
+                <option value="off">开启</option>
+                <option value="on">禁用</option>
+              </select>
+              <div className="fieldHint">禁用后，将不会自动选择最佳经验作物。</div>
             </label>
 
             <label className="field">
@@ -840,23 +849,14 @@ export function LandsPage(): React.JSX.Element {
                     setDirty(true);
                     return;
                   }
-                  const hasLowest = forceLowestLevelCrop;
-                  const hasLatest = forceLatestLevelCrop;
-                  if (hasLowest || hasLatest) {
-                    const ok = window.confirm("选择“指定种子”会关闭“固定最低等级作物”和“只种最新等级作物”。是否继续？");
-                    if (!ok) return;
-                  }
-                  if (forceLowestLevelCrop) setForceLowestLevelCrop(false);
-                  if (forceLatestLevelCrop) setForceLatestLevelCrop(false);
+                  setForceLowestLevelCrop(false);
+                  setForceLatestLevelCrop(false);
                   setFixedSeedId(next);
                   setDirty(true);
-                  scheduleSave(
-                    { farming: { forceLowestLevelCrop: false, forceLatestLevelCrop: false }, fixedSeedIdRaw: next },
-                    600
-                  );
+                  scheduleSave({ farming: { forceLowestLevelCrop: false, forceLatestLevelCrop: false }, fixedSeedIdRaw: next }, 600);
                 }}
               >
-                <option value="auto">自动推荐（最佳经验优先）</option>
+                <option value="auto">{disableAutoRecommend ? "自动推荐已禁用" : "自动推荐（最佳经验优先）"}</option>
                 {seedOptions.map((opt) => (
                   <option key={opt.value} value={opt.value} disabled={opt.disabled}>
                     {opt.label}
@@ -868,6 +868,8 @@ export function LandsPage(): React.JSX.Element {
               {!seedLoading && !seedError ? <div className="fieldHint">优先级高于推荐；不可购买/未解锁时会自动回退到推荐策略。</div> : null}
             </label>
           </div>
+
+
 
           {error ? <div className="formError">{error}</div> : null}
           {ok ? <div className="formOk">{ok}</div> : null}
