@@ -824,8 +824,8 @@ export function LandsPage(): React.JSX.Element {
                   void saveWithOverrides({ farming: { disableAutoRecommend: next } });
                 }}
               >
-                <option value="off">开启</option>
-                <option value="on">禁用</option>
+                <option value="off">否（启用自动推荐）</option>
+                <option value="on">是（禁用自动推荐）</option>
               </select>
               <div className="fieldHint">禁用后，将不会自动选择最佳经验作物。</div>
             </label>
