@@ -232,3 +232,205 @@
 {"id":"94e746b7-28fd-4f19-8f07-55f818216af4","ts":"2026-02-15T04:23:51.364Z","level":"info","scope":"好友","message":"巡查 10 人 → 偷2"}
 {"id":"a104f550-2808-4bae-ad89-9c30f72260d2","ts":"2026-02-15T04:24:04.234Z","level":"info","scope":"仓库","message":"出售 白萝卜x14, 白萝卜x6，获得 40 金币"}
 {"id":"646e59a9-7738-4e00-bd09-511e7f3bf4eb","ts":"2026-02-15T04:24:05.406Z","level":"info","scope":"收益","message":"金币+40"}
+{"id":"9cf28baa-04a1-4b43-b3e7-fdba22a76ce1","ts":"2026-02-15T08:06:02.543Z","level":"info","scope":"SERVER","message":"Admin server booting..."}
+{"id":"00fcd4d1-a6e8-47e2-a8d7-9a7a4b9f9b05","ts":"2026-02-15T08:06:02.570Z","level":"info","scope":"SERVER","message":"Listening on http://127.0.0.1:8787","details":{"ws":"ws://127.0.0.1:8787/ws"}}
+{"id":"503df3f5-65c2-4f38-ba86-3928f3dd6b9a","ts":"2026-02-15T08:07:19.228Z","level":"info","scope":"系统","message":"检测到 code 变更，统计已重置"}
+{"id":"a2cd089c-7439-4d85-a68a-3d6129f5f0c3","ts":"2026-02-15T08:07:19.436Z","level":"info","scope":"CONFIG","message":"已下发运行时配置","details":{"automation":{"autoHarvest":true,"autoFertilize":true,"autoWater":true,"autoWeed":true,"autoBug":true,"autoPlant":true,"autoFriendFarm":true,"autoTask":true,"autoSell":true},"farming":{"forceLowestLevelCrop":false,"forceLatestLevelCrop":true,"disableAutoRecommend":true,"fixedSeedId":null}}}
+{"id":"f5ce7b6c-5af7-4b5a-b85d-0db1593b03a8","ts":"2026-02-15T08:07:19.542Z","level":"info","scope":"声明","message":"【声明】本项目开源免费，严禁倒卖。请从公开仓库免费获取。"}
+{"id":"c9d86f4d-8ddb-4abe-b339-0b74268ea8ce","ts":"2026-02-15T08:07:19.996Z","level":"info","scope":"BOT","message":"登录成功: Fiime奥奥 (gid=1002494283)"}
+{"id":"b040a438-4783-4a12-a7b9-f4a29c0eed5f","ts":"2026-02-15T08:07:23.018Z","level":"info","scope":"仓库","message":"正在检查背包..."}
+{"id":"874c2d09-9d79-4b8f-aa4c-1b895ae4741b","ts":"2026-02-15T08:07:23.056Z","level":"info","scope":"仓库","message":"背包共 14 种物品"}
+{"id":"0a174bd0-c88a-411e-965e-efc84d961628","ts":"2026-02-15T08:07:23.057Z","level":"info","scope":"仓库","message":"没有果实可出售"}
+{"id":"c43a6edd-10e2-4ee1-85a5-0fc2d732414b","ts":"2026-02-15T08:07:25.258Z","level":"info","scope":"限制","message":"除虫 经验已耗尽 (已获61次)"}
+{"id":"84e86b4e-c11f-48d0-8173-bddbaf73715f","ts":"2026-02-15T08:07:25.363Z","level":"info","scope":"好友","message":"[度之]: 虫1"}
+{"id":"15f593d0-b813-43e5-9371-d2d37ed60067","ts":"2026-02-15T08:07:26.016Z","level":"info","scope":"限制","message":"除草 经验已耗尽 (已获150次)"}
+{"id":"4b3786e1-75f7-4453-af0e-00a80bb2031a","ts":"2026-02-15T08:07:26.285Z","level":"info","scope":"好友","message":"。: 草2"}
+{"id":"1d442285-d7d3-4312-a12e-d6a5aa79f07f","ts":"2026-02-15T08:07:26.917Z","level":"info","scope":"限制","message":"浇水 经验已耗尽 (已获49次)"}
+{"id":"84a1efa6-32a4-4984-a3ee-337585faef29","ts":"2026-02-15T08:07:27.177Z","level":"info","scope":"好友","message":"☆逆光背影√: 水2"}
+{"id":"806b1e9a-a74d-44f4-bedb-17440613be7f","ts":"2026-02-15T08:07:37.743Z","level":"info","scope":"好友","message":"巡查 20 人 → 除草2/除虫1/浇水2"}
+{"id":"76f24d4c-c07a-4929-9b6c-6e5351348b57","ts":"2026-02-15T08:09:12.466Z","level":"info","scope":"好友","message":"。: 偷3(牵牛花3)"}
+{"id":"b23c0b74-1c27-4393-9dfc-806c3522abea","ts":"2026-02-15T08:09:15.861Z","level":"info","scope":"SERVER","message":"Admin server booting..."}
+{"id":"0cbb709b-b391-4553-b7cd-cfbec72071e5","ts":"2026-02-15T08:09:15.880Z","level":"info","scope":"SERVER","message":"Listening on http://127.0.0.1:8787","details":{"ws":"ws://127.0.0.1:8787/ws"}}
+{"id":"a5c6b5e7-0d84-4487-9ff9-4f178690aef7","ts":"2026-02-15T08:11:09.809Z","level":"info","scope":"CONFIG","message":"已下发运行时配置","details":{"automation":{"autoHarvest":true,"autoFertilize":true,"autoWater":true,"autoWeed":true,"autoBug":true,"autoPlant":true,"autoFriendFarm":true,"autoTask":true,"autoSell":true},"farming":{"forceLowestLevelCrop":false,"forceLatestLevelCrop":true,"disableAutoRecommend":true,"fixedSeedId":null}}}
+{"id":"3ca3b66f-4ca7-4a6d-bb25-6e7d16a3cc7e","ts":"2026-02-15T08:11:09.867Z","level":"info","scope":"声明","message":"【声明】本项目开源免费，严禁倒卖。请从公开仓库免费获取。"}
+{"id":"b1a85e31-75eb-41ec-88b2-f242b8dae821","ts":"2026-02-15T08:11:10.246Z","level":"info","scope":"BOT","message":"登录成功: Fiime奥奥 (gid=1002494283)"}
+{"id":"97e52c45-d2e5-41e0-ba53-8d61155c9d4d","ts":"2026-02-15T08:11:12.334Z","level":"info","scope":"农场","message":"[虫:1 长:21] → 除虫1"}
+{"id":"36ded8b7-56ba-411e-8aed-53a13ab9cc9f","ts":"2026-02-15T08:11:13.257Z","level":"info","scope":"仓库","message":"正在检查背包..."}
+{"id":"56b8fea8-e2d5-419d-a932-7482b07c9a58","ts":"2026-02-15T08:11:13.295Z","level":"info","scope":"仓库","message":"  [果实] 牵牛花(40147) x15"}
+{"id":"8492dd4a-6c61-493f-854e-4ad55ae7ed0a","ts":"2026-02-15T08:11:13.295Z","level":"info","scope":"仓库","message":"准备出售 1 种果实..."}
+{"id":"a10dc955-5459-4ea0-8501-8cb552b96420","ts":"2026-02-15T08:11:13.294Z","level":"info","scope":"仓库","message":"背包共 15 种物品"}
+{"id":"4ddb08d1-06aa-43a9-9535-eb2e92ab94ab","ts":"2026-02-15T08:11:13.331Z","level":"info","scope":"仓库","message":"出售完成，共获得 1770 金币"}
+{"id":"7382693f-249d-47d4-8b2e-6f9d459dc184","ts":"2026-02-15T08:11:13.867Z","level":"info","scope":"收益","message":"金币+1770"}
+{"id":"1a6cbd37-be52-42cd-8973-b012289910f5","ts":"2026-02-15T08:11:15.494Z","level":"info","scope":"限制","message":"除虫 经验已耗尽 (已获61次)"}
+{"id":"df37af3f-ebea-4976-b70d-51bf66fae97c","ts":"2026-02-15T08:11:15.611Z","level":"info","scope":"好友","message":"平常心: 虫1"}
+{"id":"e6cee9a2-5d71-421d-8a80-a174131d9b0b","ts":"2026-02-15T08:11:16.237Z","level":"info","scope":"限制","message":"除草 经验已耗尽 (已获150次)"}
+{"id":"3dd95885-1e80-4000-8f1d-207692391457","ts":"2026-02-15T08:11:16.521Z","level":"info","scope":"限制","message":"浇水 经验已耗尽 (已获49次)"}
+{"id":"6748e198-a947-4ff0-8785-3e6ca8b17ef9","ts":"2026-02-15T08:11:16.625Z","level":"info","scope":"好友","message":"__/--: 草2/水1"}
+{"id":"24b64e48-9e07-417c-8a7b-c390ba94e53a","ts":"2026-02-15T08:11:30.413Z","level":"info","scope":"好友","message":"巡查 24 人 → 除草2/除虫1/浇水1"}
+{"id":"c8e5430e-17b9-4a55-ab7c-1b3321e05faa","ts":"2026-02-15T08:11:43.693Z","level":"info","scope":"好友","message":"三分浊酒: 偷1(白萝卜1)"}
+{"id":"6da8b7a7-6514-47b5-81b3-3df8ed69466b","ts":"2026-02-15T08:11:49.928Z","level":"info","scope":"好友","message":"巡查 25 人 → 偷1"}
+{"id":"2925af81-6f16-4fec-b312-4d1df5e03f78","ts":"2026-02-15T08:12:11.923Z","level":"info","scope":"SERVER","message":"Admin server booting..."}
+{"id":"a3872575-d2c2-4597-840e-1c2a698fe305","ts":"2026-02-15T08:12:11.948Z","level":"info","scope":"SERVER","message":"Listening on http://127.0.0.1:8787","details":{"ws":"ws://127.0.0.1:8787/ws"}}
+{"id":"642a8a6f-b98c-4aae-90e3-8f98a7fb6ef6","ts":"2026-02-15T08:14:23.845Z","level":"info","scope":"CONFIG","message":"已下发运行时配置","details":{"automation":{"autoHarvest":true,"autoFertilize":true,"autoWater":true,"autoWeed":true,"autoBug":true,"autoPlant":true,"autoFriendFarm":true,"autoTask":true,"autoSell":true},"farming":{"forceLowestLevelCrop":false,"forceLatestLevelCrop":true,"disableAutoRecommend":true,"fixedSeedId":null}}}
+{"id":"91a223fd-94ee-453e-a3f5-1003be2d48c7","ts":"2026-02-15T08:14:23.958Z","level":"info","scope":"声明","message":"【声明】本项目开源免费，严禁倒卖。请从公开仓库免费获取。"}
+{"id":"e44720e8-fbae-4729-ba0a-487c0ec85c05","ts":"2026-02-15T08:14:24.255Z","level":"warn","scope":"WS","message":"错误: Unexpected server response: 400"}
+{"id":"508d7ba0-812b-49fe-838d-e32a8897d7e2","ts":"2026-02-15T08:14:24.255Z","level":"warn","scope":"WS","message":"[WS] 错误: Unexpected server response: 400"}
+{"id":"798a3a5e-0b82-4903-80f3-3005b1a24a4d","ts":"2026-02-15T08:14:24.255Z","level":"warn","scope":"WS","message":"[WS] 连接关闭 (code=1006) （若你抓的是微信 code，请把平台改成 wx 再启动）"}
+{"id":"f424c1ff-87b8-4b5e-8f15-7a241248b6a9","ts":"2026-02-15T08:14:24.255Z","level":"error","scope":"系统","message":"检测到异常下线/连接关闭，已立即停止 bot 并尝试发送邮件通知"}
+{"id":"2ac9ae6d-dad7-4be0-8fbd-e4fa35a6751d","ts":"2026-02-15T08:14:24.257Z","level":"error","scope":"系统","message":"检测到 WS 400 错误，已立即停止 bot 并尝试发送邮件通知"}
+{"id":"9852c66f-0b69-4640-9932-644c291273f6","ts":"2026-02-15T08:15:10.225Z","level":"info","scope":"系统","message":"检测到 code 变更，统计已重置"}
+{"id":"630a4342-d2e8-4549-9c3e-f8f7aafda680","ts":"2026-02-15T08:15:10.236Z","level":"info","scope":"CONFIG","message":"已下发运行时配置","details":{"automation":{"autoHarvest":true,"autoFertilize":true,"autoWater":true,"autoWeed":true,"autoBug":true,"autoPlant":true,"autoFriendFarm":true,"autoTask":true,"autoSell":true},"farming":{"forceLowestLevelCrop":false,"forceLatestLevelCrop":true,"disableAutoRecommend":true,"fixedSeedId":null}}}
+{"id":"8bbcbfc3-02da-4f1b-92c3-43408f913df1","ts":"2026-02-15T08:15:10.256Z","level":"info","scope":"声明","message":"【声明】本项目开源免费，严禁倒卖。请从公开仓库免费获取。"}
+{"id":"a683e983-4575-4985-96db-fbaefcb8e01c","ts":"2026-02-15T08:15:10.562Z","level":"info","scope":"BOT","message":"登录成功: Fiime奥奥 (gid=1002494283)"}
+{"id":"5da1ab60-ccd1-4490-b9dd-8e00f86715cd","ts":"2026-02-15T08:15:12.619Z","level":"info","scope":"任务","message":"获取任务信息成功"}
+{"id":"e035b277-9676-4233-bd17-77a3d715cf86","ts":"2026-02-15T08:15:13.581Z","level":"info","scope":"仓库","message":"正在检查背包..."}
+{"id":"27acb5b2-dd5c-411c-b0e9-d45705e69bb5","ts":"2026-02-15T08:15:13.618Z","level":"info","scope":"仓库","message":"  [果实] 白萝卜(40002) x1"}
+{"id":"5d4906df-13f8-44f1-84e1-f600913e8774","ts":"2026-02-15T08:15:13.618Z","level":"info","scope":"仓库","message":"准备出售 1 种果实..."}
+{"id":"50bb0ac0-e6cf-4ad7-90b0-e1037f3dc77e","ts":"2026-02-15T08:15:13.617Z","level":"info","scope":"仓库","message":"背包共 15 种物品"}
+{"id":"d053d2f4-8367-44b5-8acb-a7ebb27bcbf0","ts":"2026-02-15T08:15:13.655Z","level":"info","scope":"仓库","message":"出售完成，共获得 2 金币"}
+{"id":"55f7efcb-a516-4e51-bc3c-9d82e57ef30d","ts":"2026-02-15T08:15:14.182Z","level":"info","scope":"收益","message":"金币+2"}
+{"id":"9f4a52b4-a738-4492-895e-bf02adbc7629","ts":"2026-02-15T08:15:14.603Z","level":"info","scope":"任务","message":"获取任务信息成功"}
+{"id":"29d0c980-31f4-447c-b17a-cec97fc82cd1","ts":"2026-02-15T08:15:14.641Z","level":"info","scope":"任务","message":"获取任务信息成功"}
+{"id":"415a5a44-236b-4fd6-be14-d5df64bc8c02","ts":"2026-02-15T08:15:16.205Z","level":"info","scope":"好友","message":"①ོ嗰ོ亽ོ、ོ淋ོ雨ོ: 草2/水1"}
+{"id":"44a0dc35-0588-464a-9a35-2ac9284919cd","ts":"2026-02-15T08:15:16.831Z","level":"info","scope":"限制","message":"浇水 经验已耗尽 (已获49次)"}
+{"id":"e4b5c4ff-cbc8-46b3-945f-ece15aeb4621","ts":"2026-02-15T08:15:16.938Z","level":"info","scope":"好友","message":"Ryxkaii: 水1"}
+{"id":"358cc2f3-4060-4b21-990d-0eea7435dfff","ts":"2026-02-15T08:15:17.682Z","level":"info","scope":"好友","message":"情非得已c: 虫1"}
+{"id":"f93e8c36-a7f2-4caf-b3e3-c3df1a041cc3","ts":"2026-02-15T08:15:18.884Z","level":"info","scope":"限制","message":"除草 经验已耗尽 (已获150次)"}
+{"id":"e4dd362e-5060-4463-9574-dea5811cfaf6","ts":"2026-02-15T08:15:18.998Z","level":"info","scope":"好友","message":"夏栀☺: 草1"}
+{"id":"14f29757-324a-4254-a726-1aabde1371b8","ts":"2026-02-15T08:15:19.626Z","level":"info","scope":"限制","message":"除虫 经验已耗尽 (已获61次)"}
+{"id":"42e7b909-785c-499f-93b9-7ce0ce7ae5b9","ts":"2026-02-15T08:15:20.170Z","level":"info","scope":"好友","message":"。: 虫1"}
+{"id":"6380591c-898a-4f6c-9cc9-e523c11454ed","ts":"2026-02-15T08:15:31.306Z","level":"info","scope":"好友","message":"巡查 24 人 → 除草3/除虫2/浇水2"}
+{"id":"fc8053fc-3300-4db4-b117-70f648da0597","ts":"2026-02-15T08:16:32.367Z","level":"info","scope":"SERVER","message":"Admin server booting..."}
+{"id":"c78d4924-fd90-4982-a801-0f27ef01bcf1","ts":"2026-02-15T08:16:32.386Z","level":"info","scope":"SERVER","message":"Listening on http://127.0.0.1:8787","details":{"ws":"ws://127.0.0.1:8787/ws"}}
+{"id":"05140a28-1e88-408e-a593-4277b3c72bf0","ts":"2026-02-15T08:16:47.921Z","level":"info","scope":"SERVER","message":"Admin server booting..."}
+{"id":"2fcb8860-1bf2-4a56-b3a8-38e16b970ec6","ts":"2026-02-15T08:16:47.965Z","level":"info","scope":"SERVER","message":"Listening on http://127.0.0.1:8787","details":{"ws":"ws://127.0.0.1:8787/ws"}}
+{"id":"df681e6d-b225-4d64-bf9b-746d245936b6","ts":"2026-02-15T08:16:50.031Z","level":"info","scope":"CONFIG","message":"已下发运行时配置","details":{"automation":{"autoHarvest":true,"autoFertilize":true,"autoWater":true,"autoWeed":true,"autoBug":true,"autoPlant":true,"autoFriendFarm":true,"autoTask":true,"autoSell":true},"farming":{"forceLowestLevelCrop":false,"forceLatestLevelCrop":true,"disableAutoRecommend":true,"fixedSeedId":null}}}
+{"id":"7dd6f876-a302-4e19-b691-9c7e4e12f8d8","ts":"2026-02-15T08:16:50.130Z","level":"info","scope":"声明","message":"【声明】本项目开源免费，严禁倒卖。请从公开仓库免费获取。"}
+{"id":"64798e68-5b73-4d07-8e71-a8dfab1bd59d","ts":"2026-02-15T08:16:50.503Z","level":"info","scope":"BOT","message":"登录成功: Fiime奥奥 (gid=1002494283)"}
+{"id":"0068291d-0718-4b15-9542-296bf04f6c37","ts":"2026-02-15T08:16:52.584Z","level":"info","scope":"任务","message":"获取任务信息成功: 每日0 成长1 其他4"}
+{"id":"a86735fa-8d62-4818-9597-ea8b9fe939c6","ts":"2026-02-15T08:16:53.509Z","level":"info","scope":"仓库","message":"正在检查背包..."}
+{"id":"3057785d-ce18-45fd-bc3a-72335da26cc4","ts":"2026-02-15T08:16:53.543Z","level":"info","scope":"仓库","message":"背包共 14 种物品"}
+{"id":"dfe3968e-070c-47c6-8dde-866360818f3e","ts":"2026-02-15T08:16:53.543Z","level":"info","scope":"仓库","message":"没有果实可出售"}
+{"id":"95a7f0c2-a653-4dd7-a380-1432a0404ab7","ts":"2026-02-15T08:16:54.541Z","level":"info","scope":"任务","message":"获取任务信息成功: 每日0 成长1 其他4"}
+{"id":"27106fb5-3f16-469e-888b-26f10570af3f","ts":"2026-02-15T08:16:54.575Z","level":"info","scope":"任务","message":"获取任务信息成功: 每日0 成长1 其他4"}
+{"id":"6485efd0-9fab-40b8-85d9-ea600a31f045","ts":"2026-02-15T08:16:55.726Z","level":"info","scope":"限制","message":"除草 经验已耗尽 (已获150次)"}
+{"id":"908b74da-7769-46cb-9e5f-385584a7f72c","ts":"2026-02-15T08:16:55.873Z","level":"info","scope":"限制","message":"除虫 经验已耗尽 (已获61次)"}
+{"id":"310df8fe-6cfc-47a4-9303-92d57ca215ad","ts":"2026-02-15T08:16:56.019Z","level":"info","scope":"限制","message":"浇水 经验已耗尽 (已获49次)"}
+{"id":"92238bf4-8e5e-47b6-8b72-545b6762c7ac","ts":"2026-02-15T08:16:56.129Z","level":"info","scope":"好友","message":"Forever: 草1/虫1/水1"}
+{"id":"6d6f89d1-c698-4d55-aedb-e68cb2d96df0","ts":"2026-02-15T08:17:06.213Z","level":"info","scope":"SERVER","message":"Admin server booting..."}
+{"id":"defb0a50-e4f3-45f1-822c-be3f3d6c0cb6","ts":"2026-02-15T08:17:06.238Z","level":"info","scope":"SERVER","message":"Listening on http://127.0.0.1:8787","details":{"ws":"ws://127.0.0.1:8787/ws"}}
+{"id":"6796ad1a-46c4-451a-a2d4-60c71ed024e7","ts":"2026-02-15T08:17:16.186Z","level":"info","scope":"CONFIG","message":"已下发运行时配置","details":{"automation":{"autoHarvest":true,"autoFertilize":true,"autoWater":true,"autoWeed":true,"autoBug":true,"autoPlant":true,"autoFriendFarm":true,"autoTask":true,"autoSell":true},"farming":{"forceLowestLevelCrop":false,"forceLatestLevelCrop":true,"disableAutoRecommend":true,"fixedSeedId":null}}}
+{"id":"69ff390c-c01f-440b-8e0e-e82edd664c30","ts":"2026-02-15T08:17:16.260Z","level":"info","scope":"声明","message":"【声明】本项目开源免费，严禁倒卖。请从公开仓库免费获取。"}
+{"id":"c809d4ce-aba3-4dad-8a41-dff2244d18d7","ts":"2026-02-15T08:17:16.644Z","level":"info","scope":"BOT","message":"登录成功: Fiime奥奥 (gid=1002494283)"}
+{"id":"d7f5953a-ac94-4f5e-8965-d4028eb5e454","ts":"2026-02-15T08:17:18.710Z","level":"info","scope":"任务","message":"获取任务信息成功: 每日0 成长1 其他4"}
+{"id":"20e8805a-566e-4ba6-9ada-a4fd8f2ac1a5","ts":"2026-02-15T08:17:19.663Z","level":"info","scope":"仓库","message":"正在检查背包..."}
+{"id":"33f09a5a-c8b7-4e12-9c54-0ed245f91e01","ts":"2026-02-15T08:17:19.701Z","level":"info","scope":"仓库","message":"背包共 14 种物品"}
+{"id":"c342a630-8dc7-4e81-97d1-f24030954c70","ts":"2026-02-15T08:17:19.703Z","level":"info","scope":"仓库","message":"没有果实可出售"}
+{"id":"cab3a554-0139-4337-a5c4-24961cb84957","ts":"2026-02-15T08:17:20.697Z","level":"info","scope":"任务","message":"获取任务信息成功: 每日0 成长1 其他4"}
+{"id":"4a8b5d3b-06d8-49a7-a8a3-c58f1f40c1ca","ts":"2026-02-15T08:17:20.733Z","level":"info","scope":"任务","message":"获取任务信息成功: 每日0 成长1 其他4"}
+{"id":"8b35844c-5ab5-493d-ae46-8ca309241c36","ts":"2026-02-15T08:17:21.880Z","level":"info","scope":"限制","message":"除草 经验已耗尽 (已获150次)"}
+{"id":"4643833a-8441-4d9a-9445-72d6b3fd63dd","ts":"2026-02-15T08:17:22.190Z","level":"info","scope":"限制","message":"除虫 经验已耗尽 (已获61次)"}
+{"id":"791388d0-ae9a-48db-aded-0f002e0fc5e0","ts":"2026-02-15T08:17:22.503Z","level":"info","scope":"限制","message":"浇水 经验已耗尽 (已获49次)"}
+{"id":"39c2768c-fb02-4085-924a-e7b46873a592","ts":"2026-02-15T08:17:22.608Z","level":"info","scope":"好友","message":"单眼皮: 草2/虫2/水1"}
+{"id":"2da4f2b0-c71c-4c79-bf94-1354acf2180f","ts":"2026-02-15T08:17:34.243Z","level":"info","scope":"好友","message":"巡查 20 人 → 除草2/除虫2/浇水1"}
+{"id":"08e237fd-3381-433c-90a2-f42c5f76edce","ts":"2026-02-15T08:18:01.645Z","level":"info","scope":"农场","message":"[虫:1 长:21] → 除虫1"}
+{"id":"737937a5-9c3f-4abc-95a7-c2259da97cb3","ts":"2026-02-15T08:18:12.994Z","level":"info","scope":"好友","message":"Martian: 偷1(鲜姜1)"}
+{"id":"2aaf6ff5-8518-4883-9240-16a86be3335d","ts":"2026-02-15T08:18:15.482Z","level":"info","scope":"SERVER","message":"Admin server booting..."}
+{"id":"b23375c9-4b2b-4b83-8fa9-c5bfad45da2b","ts":"2026-02-15T08:18:15.509Z","level":"info","scope":"SERVER","message":"Listening on http://127.0.0.1:8787","details":{"ws":"ws://127.0.0.1:8787/ws"}}
+{"id":"5b9c7211-b4fb-4fb7-be24-8f79ebfa329f","ts":"2026-02-15T08:32:20.796Z","level":"info","scope":"CONFIG","message":"已下发运行时配置","details":{"automation":{"autoHarvest":true,"autoFertilize":true,"autoWater":true,"autoWeed":true,"autoBug":true,"autoPlant":true,"autoFriendFarm":true,"autoTask":true,"autoSell":true},"farming":{"forceLowestLevelCrop":false,"forceLatestLevelCrop":true,"disableAutoRecommend":true,"fixedSeedId":null}}}
+{"id":"02a86772-5c2a-4016-8a8a-ff5362cbd28c","ts":"2026-02-15T08:32:20.840Z","level":"info","scope":"声明","message":"【声明】本项目开源免费，严禁倒卖。请从公开仓库免费获取。"}
+{"id":"9d59cffc-3843-4050-ae56-02629c231008","ts":"2026-02-15T08:32:21.122Z","level":"warn","scope":"WS","message":"[WS] 错误: Unexpected server response: 400"}
+{"id":"95f3aa2d-b35a-4179-8f99-877071b05475","ts":"2026-02-15T08:32:21.122Z","level":"warn","scope":"WS","message":"错误: Unexpected server response: 400"}
+{"id":"001781e1-e744-4269-bdab-e2964e49ba18","ts":"2026-02-15T08:32:21.122Z","level":"warn","scope":"WS","message":"[WS] 连接关闭 (code=1006) （若你抓的是微信 code，请把平台改成 wx 再启动）"}
+{"id":"c8a09341-5a9e-4809-95dc-cf3c72344ae2","ts":"2026-02-15T08:32:21.122Z","level":"error","scope":"系统","message":"检测到异常下线/连接关闭，已立即停止 bot 并尝试发送邮件通知"}
+{"id":"5ee972c7-2b04-4407-a11c-c1fea14ecbea","ts":"2026-02-15T08:32:21.126Z","level":"error","scope":"系统","message":"检测到 WS 400 错误，已立即停止 bot 并尝试发送邮件通知"}
+{"id":"ac05f8cd-6f39-44c0-b498-01ce03c491d8","ts":"2026-02-15T08:33:29.398Z","level":"info","scope":"系统","message":"检测到 code 变更，统计已重置"}
+{"id":"70842174-2d5f-42e0-aa57-d7c861b95a71","ts":"2026-02-15T08:33:29.427Z","level":"info","scope":"CONFIG","message":"已下发运行时配置","details":{"automation":{"autoHarvest":true,"autoFertilize":true,"autoWater":true,"autoWeed":true,"autoBug":true,"autoPlant":true,"autoFriendFarm":true,"autoTask":true,"autoSell":true},"farming":{"forceLowestLevelCrop":false,"forceLatestLevelCrop":true,"disableAutoRecommend":true,"fixedSeedId":null}}}
+{"id":"f60f0c8d-bbe9-40f9-aee3-d09261c7f860","ts":"2026-02-15T08:33:29.471Z","level":"info","scope":"声明","message":"【声明】本项目开源免费，严禁倒卖。请从公开仓库免费获取。"}
+{"id":"d7000a0c-791d-4e43-821f-66b8b8561382","ts":"2026-02-15T08:33:29.870Z","level":"info","scope":"BOT","message":"登录成功: Fiime奥奥 (gid=1002494283)"}
+{"id":"fcf1a96c-6bc2-4a78-8b53-57d2716b394d","ts":"2026-02-15T08:33:31.954Z","level":"info","scope":"任务","message":"获取任务信息成功: 每日0 成长1 其他4"}
+{"id":"4480e5c5-9a19-489c-9332-e2b152777f8f","ts":"2026-02-15T08:33:32.897Z","level":"info","scope":"仓库","message":"正在检查背包..."}
+{"id":"322dd5a8-a23d-4894-8d84-aa7cf38a5102","ts":"2026-02-15T08:33:32.931Z","level":"info","scope":"仓库","message":"  [果实] 辣椒(40009) x6"}
+{"id":"6325bc09-fc3f-42a7-845a-067b07b0b690","ts":"2026-02-15T08:33:32.931Z","level":"info","scope":"仓库","message":"  [果实] 南瓜(40010) x12"}
+{"id":"28b09501-42bc-413b-aafd-12f161b759c4","ts":"2026-02-15T08:33:32.930Z","level":"info","scope":"仓库","message":"背包共 26 种物品"}
+{"id":"17c04c58-9f8f-481d-8143-0c110eb751f6","ts":"2026-02-15T08:33:32.932Z","level":"info","scope":"仓库","message":"  [果实] 南瓜(40010) x20"}
+{"id":"74ec7132-fcb2-4768-9ec0-995d0a4c619b","ts":"2026-02-15T08:33:32.931Z","level":"info","scope":"仓库","message":"  [果实] 南瓜(40010) x6"}
+{"id":"3532731c-83df-4634-a6c2-2f38c8081e09","ts":"2026-02-15T08:33:32.931Z","level":"info","scope":"仓库","message":"  [果实] 南瓜(40010) x30"}
+{"id":"c4e203cf-b20e-46e1-a017-595fc172a3d4","ts":"2026-02-15T08:33:32.932Z","level":"info","scope":"仓库","message":"  [果实] 南瓜(40010) x168"}
+{"id":"88c1e9bd-cf94-4c39-84e6-07c7ccdf17c9","ts":"2026-02-15T08:33:32.932Z","level":"info","scope":"仓库","message":"  [果实] 鲜姜(40066) x4"}
+{"id":"bac8ade2-1a00-4fcf-8eb3-71f75c332ae7","ts":"2026-02-15T08:33:32.932Z","level":"info","scope":"仓库","message":"  [果实] 生菜(40096) x7"}
+{"id":"0a8569dd-300f-4922-8fc0-9ea3e095e9df","ts":"2026-02-15T08:33:32.933Z","level":"info","scope":"仓库","message":"  [果实] 秋菊（红色）(40162) x10"}
+{"id":"586c8382-ce8f-4291-b14e-54274ec02fa7","ts":"2026-02-15T08:33:32.933Z","level":"info","scope":"仓库","message":"  [果实] 生菜(40096) x69"}
+{"id":"dc5e189c-602a-4447-a0be-34f18786a32f","ts":"2026-02-15T08:33:32.933Z","level":"info","scope":"仓库","message":"准备出售 12 种果实..."}
+{"id":"13f761b2-3971-4cac-91c8-d5108e206a92","ts":"2026-02-15T08:33:32.933Z","level":"info","scope":"仓库","message":"  [果实] 秋菊（红色）(40162) x42"}
+{"id":"aa96e771-42d9-4f75-b830-e3831fd0403d","ts":"2026-02-15T08:33:32.933Z","level":"info","scope":"仓库","message":"  [果实] 秋菊（红色）(40162) x135"}
+{"id":"f635449a-ed61-4a4c-a69b-08dd96e8b6e9","ts":"2026-02-15T08:33:32.971Z","level":"info","scope":"仓库","message":"出售完成，共获得 20245 金币"}
+{"id":"6659906c-bd72-4071-9c8a-3d18f818fb41","ts":"2026-02-15T08:33:33.511Z","level":"info","scope":"收益","message":"金币+20245"}
+{"id":"8eca2d90-285e-4965-b65f-7151f44f6962","ts":"2026-02-15T08:33:33.933Z","level":"info","scope":"任务","message":"获取任务信息成功: 每日0 成长1 其他4"}
+{"id":"a8d26628-c535-4d41-ae2c-3eef35020866","ts":"2026-02-15T08:33:33.968Z","level":"info","scope":"任务","message":"获取任务信息成功: 每日0 成长1 其他4"}
+{"id":"cb0a45b4-ab05-4021-b270-3c56cec283df","ts":"2026-02-15T08:33:37.559Z","level":"info","scope":"好友","message":"可包: 草7/虫3/水7"}
+{"id":"548cc77d-1dd0-4b98-a9a0-5b596a7953cd","ts":"2026-02-15T08:33:38.185Z","level":"info","scope":"限制","message":"除草 经验已耗尽 (已获150次)"}
+{"id":"8e81b364-b047-462e-83d9-d70487636cb5","ts":"2026-02-15T08:33:38.295Z","level":"info","scope":"好友","message":"ㅤ: 草1"}
+{"id":"cd122ef3-571d-4e8d-9626-d526e5f23333","ts":"2026-02-15T08:33:38.926Z","level":"info","scope":"限制","message":"除虫 经验已耗尽 (已获61次)"}
+{"id":"1f68b3eb-a5a6-4918-bd1c-6044778abebe","ts":"2026-02-15T08:33:39.206Z","level":"info","scope":"限制","message":"浇水 经验已耗尽 (已获49次)"}
+{"id":"ff1d9c39-c7fd-423a-a9a2-12eb573e44ae","ts":"2026-02-15T08:33:39.589Z","level":"info","scope":"好友","message":"情非得已c: 虫2/水3"}
+{"id":"89076cab-2bf1-4f4b-beda-577c4038d51e","ts":"2026-02-15T08:33:46.512Z","level":"info","scope":"好友","message":"巡查 14 人 → 除草8/除虫5/浇水10"}
+{"id":"0bc7e476-b849-4620-8ce5-087c2d116b81","ts":"2026-02-15T08:33:52.131Z","level":"info","scope":"好友","message":"三分浊酒: 偷1(白萝卜1)"}
+{"id":"b03181f5-ad71-4762-b91d-b2267d7ef4ba","ts":"2026-02-15T08:33:59.038Z","level":"info","scope":"好友","message":"巡查 14 人 → 偷1"}
+{"id":"16832b97-2899-4751-bdb9-7238fd0ae96b","ts":"2026-02-15T08:34:30.390Z","level":"info","scope":"好友","message":"三分浊酒: 偷4(白萝卜4)"}
+{"id":"e3ec8a6f-3838-4961-a41e-ce3301af6975","ts":"2026-02-15T08:34:35.549Z","level":"info","scope":"好友","message":"巡查 14 人 → 偷4"}
+{"id":"d43db23c-e966-4222-b8af-617ab63908f8","ts":"2026-02-15T08:34:39.956Z","level":"info","scope":"仓库","message":"出售 白萝卜x5，获得 10 金币"}
+{"id":"6487023f-7e02-40d2-aa09-b2c3bd6817d7","ts":"2026-02-15T08:34:40.720Z","level":"info","scope":"好友","message":"三分浊酒: 偷2(白萝卜2)"}
+{"id":"3c172b7a-a208-4de8-a772-76c3f643a904","ts":"2026-02-15T08:34:41.114Z","level":"info","scope":"收益","message":"金币+10"}
+{"id":"d4c50c93-55f7-45d5-9d1b-b85758ef9118","ts":"2026-02-15T08:34:49.363Z","level":"info","scope":"好友","message":"巡查 15 人 → 偷2"}
+{"id":"cd9b1fb0-8fdd-4ba9-af01-1997860ac7e6","ts":"2026-02-15T08:35:01.710Z","level":"info","scope":"好友","message":"三分浊酒: 偷3(白萝卜3)"}
+{"id":"dc46da48-d184-4984-9149-4a7f0f205c29","ts":"2026-02-15T08:35:02.823Z","level":"info","scope":"好友","message":"巡查 16 人 → 偷3"}
+{"id":"bbdb7935-1402-424d-a34b-89fb7dee729b","ts":"2026-02-15T08:35:16.520Z","level":"info","scope":"SERVER","message":"Admin server booting..."}
+{"id":"d86cca7d-ce4e-492b-be6e-59a7d53f9f38","ts":"2026-02-15T08:35:16.537Z","level":"info","scope":"SERVER","message":"Listening on http://127.0.0.1:8787","details":{"ws":"ws://127.0.0.1:8787/ws"}}
+{"id":"31ae4334-d6e4-4f99-8acb-3445023f79bc","ts":"2026-02-15T08:35:35.565Z","level":"info","scope":"CONFIG","message":"已下发运行时配置","details":{"automation":{"autoHarvest":true,"autoFertilize":true,"autoWater":true,"autoWeed":true,"autoBug":true,"autoPlant":true,"autoFriendFarm":true,"autoTask":true,"autoSell":true},"farming":{"forceLowestLevelCrop":false,"forceLatestLevelCrop":true,"disableAutoRecommend":true,"fixedSeedId":null}}}
+{"id":"5f995f76-01fa-40f8-8cff-36c642c9cd4c","ts":"2026-02-15T08:35:35.625Z","level":"info","scope":"声明","message":"【声明】本项目开源免费，严禁倒卖。请从公开仓库免费获取。"}
+{"id":"6f6b8aed-8b78-4cfd-ab20-0be08a97ea95","ts":"2026-02-15T08:35:35.973Z","level":"info","scope":"BOT","message":"登录成功: Fiime奥奥 (gid=1002494283)"}
+{"id":"9d309e72-73a7-4fed-b572-99a28bf05b02","ts":"2026-02-15T08:35:38.035Z","level":"info","scope":"任务","message":"获取任务信息成功: 每日0 成长1 其他4"}
+{"id":"30e783ef-242b-40ff-a8b3-b6ebd05f3fe3","ts":"2026-02-15T08:35:38.989Z","level":"info","scope":"仓库","message":"正在检查背包..."}
+{"id":"98e9442d-0821-4587-970a-9c0a26c1b355","ts":"2026-02-15T08:35:39.028Z","level":"info","scope":"仓库","message":"  [果实] 白萝卜(40002) x5"}
+{"id":"a33347f5-cd82-4778-b2f5-e2887fac9f1b","ts":"2026-02-15T08:35:39.027Z","level":"info","scope":"仓库","message":"背包共 15 种物品"}
+{"id":"50f5fbad-7298-48cc-be6e-0aae24145134","ts":"2026-02-15T08:35:39.028Z","level":"info","scope":"仓库","message":"准备出售 1 种果实..."}
+{"id":"7bdf5d19-fb51-4260-b5ef-264e09c25ebe","ts":"2026-02-15T08:35:39.069Z","level":"info","scope":"仓库","message":"出售完成，共获得 10 金币"}
+{"id":"e8944031-b11e-497e-92af-26d1ddeb88be","ts":"2026-02-15T08:35:39.596Z","level":"info","scope":"收益","message":"金币+10"}
+{"id":"72bcf139-4c17-4135-a2ce-fec92ce3e3c0","ts":"2026-02-15T08:35:40.026Z","level":"info","scope":"任务","message":"获取任务信息成功: 每日0 成长1 其他4"}
+{"id":"a583b380-faa1-4298-98c4-769354037254","ts":"2026-02-15T08:35:40.064Z","level":"info","scope":"任务","message":"获取任务信息成功: 每日0 成长1 其他4"}
+{"id":"8b3dbf69-331a-4feb-ba53-af15fa71293e","ts":"2026-02-15T08:35:41.198Z","level":"info","scope":"限制","message":"除虫 经验已耗尽 (已获61次)"}
+{"id":"2ef7d5de-04ac-4f43-993b-9a8804a38042","ts":"2026-02-15T08:35:41.349Z","level":"info","scope":"限制","message":"浇水 经验已耗尽 (已获49次)"}
+{"id":"3960e818-8dc5-4adb-b85b-900291c94468","ts":"2026-02-15T08:35:41.449Z","level":"info","scope":"好友","message":"Ryxkaii: 虫1/水1"}
+{"id":"acddcb53-ef84-4c67-b036-c091e168e12f","ts":"2026-02-15T08:35:42.085Z","level":"info","scope":"限制","message":"除草 经验已耗尽 (已获150次)"}
+{"id":"6df50671-cf8f-45f4-bad4-93c8965ca89f","ts":"2026-02-15T08:35:42.187Z","level":"info","scope":"好友","message":"亖儿: 草1"}
+{"id":"5faac0dd-2136-42d1-9148-55b7583e78be","ts":"2026-02-15T08:35:51.307Z","level":"info","scope":"好友","message":"巡查 16 人 → 除草1/除虫1/浇水1"}
+{"id":"b9cfa96b-c408-4868-bc45-14462ab0c2df","ts":"2026-02-15T08:36:01.829Z","level":"info","scope":"农场","message":"[草:1 长:21] → 除草1"}
+{"id":"b100addb-d9e3-4768-916e-6c5779754953","ts":"2026-02-15T08:36:16.263Z","level":"info","scope":"SERVER","message":"Admin server booting..."}
+{"id":"5c340dda-4643-4834-b6a6-bba538a23b37","ts":"2026-02-15T08:36:16.279Z","level":"info","scope":"SERVER","message":"Listening on http://127.0.0.1:8787","details":{"ws":"ws://127.0.0.1:8787/ws"}}
+{"id":"e1f31554-df37-47a6-ba8b-1c11afb28c36","ts":"2026-02-15T08:36:30.790Z","level":"info","scope":"CONFIG","message":"已下发运行时配置","details":{"automation":{"autoHarvest":true,"autoFertilize":true,"autoWater":true,"autoWeed":true,"autoBug":true,"autoPlant":true,"autoFriendFarm":true,"autoTask":true,"autoSell":true},"farming":{"forceLowestLevelCrop":false,"forceLatestLevelCrop":true,"disableAutoRecommend":true,"fixedSeedId":null}}}
+{"id":"ea4a5821-5119-42f4-9978-ad6feb2df5aa","ts":"2026-02-15T08:36:30.883Z","level":"info","scope":"声明","message":"【声明】本项目开源免费，严禁倒卖。请从公开仓库免费获取。"}
+{"id":"fce1f1e7-3b18-417c-ab3c-48efe54d2aac","ts":"2026-02-15T08:36:31.222Z","level":"info","scope":"BOT","message":"登录成功: Fiime奥奥 (gid=1002494283)"}
+{"id":"159449ed-a912-4695-acf4-fbc62b3d8078","ts":"2026-02-15T08:36:33.278Z","level":"info","scope":"任务","message":"获取任务信息成功: 每日0 成长1 其他4"}
+{"id":"28b7a745-8041-4ecb-9b86-dc6626fbda1e","ts":"2026-02-15T08:36:33.279Z","level":"info","scope":"任务","message":"奖励数据结构示例: [{\"id\":\"1001\",\"count\":\"16700\"},{\"id\":\"1002\",\"count\":\"20\"},{\"id\":\"1101\",\"count\":\"1410\"},{\"id\":\"100003\",\"count\":\"5\"}]"}
+{"id":"afd207c1-a240-49eb-8df9-d1beb25a621f","ts":"2026-02-15T08:36:34.234Z","level":"info","scope":"仓库","message":"正在检查背包..."}
+{"id":"54357429-8f27-424f-9904-86f747958f87","ts":"2026-02-15T08:36:34.267Z","level":"info","scope":"仓库","message":"背包共 14 种物品"}
+{"id":"c9037e1e-1dd6-4041-a7bc-e2f615cde960","ts":"2026-02-15T08:36:34.267Z","level":"info","scope":"仓库","message":"没有果实可出售"}
+{"id":"93578d8c-fbd0-415a-9728-db8aed3bc02c","ts":"2026-02-15T08:36:35.273Z","level":"info","scope":"任务","message":"获取任务信息成功: 每日0 成长1 其他4"}
+{"id":"7958c4f8-4ebb-47b3-84ae-8c993d07b7cb","ts":"2026-02-15T08:36:35.273Z","level":"info","scope":"任务","message":"奖励数据结构示例: [{\"id\":\"1001\",\"count\":\"16700\"},{\"id\":\"1002\",\"count\":\"20\"},{\"id\":\"1101\",\"count\":\"1410\"},{\"id\":\"100003\",\"count\":\"5\"}]"}
+{"id":"a9872dee-6816-46bb-8f2b-c42e835f9909","ts":"2026-02-15T08:36:35.306Z","level":"info","scope":"任务","message":"获取任务信息成功: 每日0 成长1 其他4"}
+{"id":"c4b6d926-6d34-494f-b7f0-14f25ca022a5","ts":"2026-02-15T08:36:35.306Z","level":"info","scope":"任务","message":"奖励数据结构示例: [{\"id\":\"1001\",\"count\":\"16700\"},{\"id\":\"1002\",\"count\":\"20\"},{\"id\":\"1101\",\"count\":\"1410\"},{\"id\":\"100003\",\"count\":\"5\"}]"}
+{"id":"efc7aa38-516a-482f-8601-3f1a7998cb4a","ts":"2026-02-15T08:36:36.465Z","level":"info","scope":"限制","message":"除虫 经验已耗尽 (已获61次)"}
+{"id":"14bfc11a-071b-4c0c-8956-301a7e19ac5d","ts":"2026-02-15T08:36:36.608Z","level":"info","scope":"限制","message":"浇水 经验已耗尽 (已获49次)"}
+{"id":"0868184b-c834-4a4b-abab-b8406dbce1cd","ts":"2026-02-15T08:36:36.712Z","level":"info","scope":"好友","message":"罗伊·马斯坦: 虫1/水1"}
+{"id":"ff96d95e-722a-442f-a2dd-7cb9d0642b7c","ts":"2026-02-15T08:36:37.313Z","level":"info","scope":"限制","message":"除草 经验已耗尽 (已获150次)"}
+{"id":"3df30bbd-7121-4af2-83f6-515831b0d734","ts":"2026-02-15T08:36:37.418Z","level":"info","scope":"好友","message":"__/--: 草1"}
+{"id":"3638fce0-0454-4229-a31a-72cd17b32366","ts":"2026-02-15T08:36:46.500Z","level":"info","scope":"好友","message":"巡查 16 人 → 除草1/除虫1/浇水1"}
+{"id":"50fa10eb-8be5-4558-abe7-d863a4b7d5f3","ts":"2026-02-15T08:39:11.251Z","level":"info","scope":"好友","message":"三分浊酒: 偷1(白萝卜1)"}
+{"id":"ac72e3c7-b933-41c3-a37b-6dbdd54b0e3c","ts":"2026-02-15T08:39:24.027Z","level":"info","scope":"好友","message":"巡查 19 人 → 偷1"}
+{"id":"826abe06-b207-4529-9a85-ee5d09d20b15","ts":"2026-02-15T08:39:41.316Z","level":"info","scope":"仓库","message":"出售 白萝卜x1，获得 2 金币"}
+{"id":"48dc5036-385b-4664-b4a3-8511da6d6470","ts":"2026-02-15T08:39:42.121Z","level":"info","scope":"收益","message":"金币+2"}
+{"id":"302758ea-3abb-4c1f-a43d-326bcf1e8ac5","ts":"2026-02-15T08:40:08.137Z","level":"info","scope":"农场","message":"[草:1 长:21] → 除草1"}
+{"id":"c5dc21f1-572d-4a9f-bb94-d260f36fd3f4","ts":"2026-02-15T08:40:15.692Z","level":"info","scope":"农场","message":"收到推送: 1块土地变化，检查中..."}
+{"id":"ff8ff16b-abed-436a-b8be-648bf8f0a30d","ts":"2026-02-15T08:40:39.998Z","level":"info","scope":"SERVER","message":"Admin server booting..."}
+{"id":"9ba56b5a-e909-4b1e-8dc1-89b2a4919442","ts":"2026-02-15T08:40:40.014Z","level":"info","scope":"SERVER","message":"Listening on http://127.0.0.1:8787","details":{"ws":"ws://127.0.0.1:8787/ws"}}

@@ -60,6 +60,20 @@ type BotStatus = {
       message: string;
     }>;
   } | null;
+  tasks?: {
+    updatedAt: number;
+    items: Array<{
+      id: number;
+      desc: string;
+      progress: number;
+      totalProgress: number;
+      isClaimed: boolean;
+      isUnlocked: boolean;
+      shareMultiple: number;
+      rewards: Array<{ id: number; count: number }>;
+      taskType: number;
+    }>;
+  } | null;
 };
 
 type StartBotInput = {
@@ -648,6 +662,80 @@ export class BotController {
     return { updatedAt: Date.now(), total: items.length, unlocked: unlockedCount, items };
   }
 
+  private updateTaskViews(taskMod: { getLastTaskInfo: () => unknown; toNum?: (v: unknown) => number }): void {
+    if (!this.status.running) return;
+
+    try {
+      const toNum = taskMod.toNum || ((v: unknown) => (typeof v === "number" ? v : Number(v) || 0));
+      const taskInfo = taskMod.getLastTaskInfo();
+      
+      if (!taskInfo) {
+        this.status.tasks = { updatedAt: Date.now(), items: [] };
+        return;
+      }
+
+      const info = taskInfo as Record<string, unknown>;
+      
+      const dailyTasks = (info.daily_tasks as unknown[]) || [];
+      const growthTasks = (info.growth_tasks as unknown[]) || [];
+      const otherTasks = (info.tasks as unknown[]) || [];
+      
+      const rawTasks = [...dailyTasks, ...growthTasks, ...otherTasks];
+
+      const index = this.getBagIndex();
+
+      const getItemName = (itemId: number): string => {
+        if (index.goodsNameById.has(itemId)) {
+          return index.goodsNameById.get(itemId)!;
+        }
+        if (index.seedNameBySeedId.has(itemId)) {
+          return index.seedNameBySeedId.get(itemId)!;
+        }
+        if (index.fruitByFruitId.has(itemId)) {
+          return index.fruitByFruitId.get(itemId)!.name;
+        }
+        return `物品${itemId}`;
+      };
+
+      const seenIds = new Set<number>();
+      const items = rawTasks
+        .map((t: unknown) => {
+          const task = t as Record<string, unknown>;
+          const idNum = toNum(task.id);
+          if (!Number.isFinite(idNum)) return null;
+          
+          if (seenIds.has(idNum)) return null;
+          seenIds.add(idNum);
+
+          const rewards = ((task.rewards as Array<{ id?: unknown; count?: unknown }> | undefined) || []).map((r) => {
+            const rewardId = toNum(r.id);
+            return {
+              id: rewardId,
+              count: toNum(r.count),
+              name: getItemName(rewardId),
+            };
+          });
+
+          return {
+            id: idNum,
+            desc: String(task.desc || `任务#${idNum}`),
+            progress: toNum(task.progress),
+            totalProgress: toNum(task.total_progress),
+            isClaimed: Boolean(task.is_claimed),
+            isUnlocked: Boolean(task.is_unlocked) !== false,
+            shareMultiple: toNum(task.share_multiple),
+            rewards,
+            taskType: toNum(task.task_type),
+          };
+        })
+        .filter((x): x is NonNullable<typeof x> => x != null);
+
+      this.status.tasks = { updatedAt: Date.now(), items };
+    } catch (e) {
+      this.status.tasks = { updatedAt: Date.now(), items: [] };
+    }
+  }
+
   async start(input: StartBotInput): Promise<void> {
     await this.runExclusive(async () => {
       await this.startInternal(input);
@@ -701,6 +789,8 @@ export class BotController {
     const taskMod = this.require(path.join(this.projectRoot, "src", "task.js")) as {
       initTaskSystem: () => void;
       cleanupTaskSystem: () => void;
+      getLastTaskInfo: () => unknown;
+      getTaskInfo?: () => Promise<unknown>;
     };
     const warehouseMod = this.require(path.join(this.projectRoot, "src", "warehouse.js")) as {
       getBag: () => Promise<unknown>;
@@ -754,6 +844,7 @@ export class BotController {
       farmSummary: null,
       bag: null,
       visits: { updatedAt: Date.now(), items: [] },
+      tasks: { updatedAt: Date.now(), items: [] },
     };
 
     (utilsMod.botEvents as unknown as { removeAllListeners?: (evt: string) => void }).removeAllListeners?.("log");
@@ -815,6 +906,17 @@ export class BotController {
       farmMod.startFarmCheckLoop();
       if (this.friendFarmEnabled) friendMod.startFriendCheckLoop();
       taskMod.initTaskSystem();
+      
+      // 立即获取任务信息
+      setTimeout(async () => {
+        try {
+          if (taskMod.getTaskInfo) {
+            await taskMod.getTaskInfo();
+            this.updateTaskViews({ ...taskMod, toNum: utilsMod.toNum });
+          }
+        } catch {}
+      }, 2000);
+      
       setTimeout(() => warehouseMod.debugSellFruits(), 3000);
       warehouseMod.startSellLoop(60_000);
 
@@ -828,8 +930,9 @@ export class BotController {
           expProgress: expProgress ?? undefined,
         };
         this.updateFarmViews({ farmMod, utilsMod });
-        const gold = Number(next.gold ?? 0);
-        const exp = Number(next.exp ?? 0);
+      this.updateTaskViews({ ...taskMod, toNum: utilsMod.toNum });
+      const gold = Number(next.gold ?? 0);
+      const exp = Number(next.exp ?? 0);
         const goldDelta = gold - lastGold;
         const expDelta = exp - lastExp;
         lastGold = gold;

@@ -1716,6 +1716,19 @@
   backdrop-filter: blur(10px);
 }
 
+.tableScrollable {
+  max-height: 360px;
+  overflow: auto;
+  overscroll-behavior: contain;
+}
+
+.tableScrollable .thead {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  backdrop-filter: blur(10px);
+}
+
 .thead,
 .trow {
   display: grid;

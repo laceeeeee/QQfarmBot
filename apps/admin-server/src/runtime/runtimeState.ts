@@ -126,5 +126,19 @@ export type CoreSnapshot = {
         message: string;
       }>;
     } | null;
+    tasks?: {
+      updatedAt: number;
+      items: Array<{
+        id: number;
+        desc: string;
+        progress: number;
+        totalProgress: number;
+        isClaimed: boolean;
+        isUnlocked: boolean;
+        shareMultiple: number;
+        rewards: Array<{ id: number; count: number; name?: string }>;
+        taskType: number;
+      }>;
+    } | null;
   };
 };

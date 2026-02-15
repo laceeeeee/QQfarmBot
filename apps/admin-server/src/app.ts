@@ -566,6 +566,7 @@ export function buildSnapshot(services: Services): CoreSnapshot {
       lands: bot.lands ?? null,
       bag: bot.bag ?? null,
       visits: bot.visits ?? null,
+      tasks: bot.tasks ?? null,
     },
   };
   return snapshot;

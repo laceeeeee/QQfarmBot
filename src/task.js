@@ -7,12 +7,38 @@ const { sendMsgAsync, networkEvents } = require('./network');
 const { CONFIG } = require('./config');
 const { toLong, toNum, log, logWarn, sleep } = require('./utils');
 
+let lastTaskInfo = null;
+
 // ============ 任务 API ============
 
 async function getTaskInfo() {
     const body = types.TaskInfoRequest.encode(types.TaskInfoRequest.create({})).finish();
     const { body: replyBody } = await sendMsgAsync('gamepb.taskpb.TaskService', 'TaskInfo', body);
-    return types.TaskInfoReply.decode(replyBody);
+    const reply = types.TaskInfoReply.decode(replyBody);
+    lastTaskInfo = reply.task_info || null;
+    
+    if (lastTaskInfo) {
+        const dailyCount = (lastTaskInfo.daily_tasks || []).length;
+        const growthCount = (lastTaskInfo.growth_tasks || []).length;
+        const otherCount = (lastTaskInfo.tasks || []).length;
+        log('任务', `获取任务信息成功: 每日${dailyCount} 成长${growthCount} 其他${otherCount}`);
+        
+        const allTasks = [
+            ...(lastTaskInfo.daily_tasks || []),
+            ...(lastTaskInfo.growth_tasks || []),
+            ...(lastTaskInfo.tasks || []),
+        ];
+        const firstTask = allTasks[0];
+        if (firstTask && firstTask.rewards) {
+            log('任务', `奖励数据结构示例: ${JSON.stringify(firstTask.rewards)}`);
+        }
+    }
+    
+    return reply;
+}
+
+function getLastTaskInfo() {
+    return lastTaskInfo;
 }
 
 async function claimTaskReward(taskId, doShared = false) {
@@ -125,6 +151,15 @@ async function checkAndClaimTasks() {
  * 处理任务状态变化推送
  */
 function onTaskInfoNotify(taskInfo) {
+    lastTaskInfo = taskInfo || null;
+    
+    if (taskInfo) {
+        const dailyCount = (taskInfo.daily_tasks || []).length;
+        const growthCount = (taskInfo.growth_tasks || []).length;
+        const otherCount = (taskInfo.tasks || []).length;
+        log('任务', `收到任务推送: 每日${dailyCount} 成长${growthCount} 其他${otherCount}`);
+    }
+    
     if (!CONFIG.autoTask) return;
     if (!taskInfo) return;
 
@@ -167,12 +202,19 @@ async function claimTasksFromList(claimable) {
 // ============ 初始化 ============
 
 function initTaskSystem() {
-    if (!CONFIG.autoTask) return;
     // 监听任务状态变化推送
     networkEvents.on('taskInfoNotify', onTaskInfoNotify);
 
-    // 启动时检查一次任务
-    setTimeout(() => checkAndClaimTasks(), 4000);
+    // 启动时获取一次任务信息
+    setTimeout(async () => {
+        try {
+            await getTaskInfo();
+        } catch {}
+        // 如果开启了自动领取，再检查一次
+        if (CONFIG.autoTask) {
+            checkAndClaimTasks();
+        }
+    }, 4000);
 }
 
 function cleanupTaskSystem() {
@@ -183,4 +225,6 @@ module.exports = {
     checkAndClaimTasks,
     initTaskSystem,
     cleanupTaskSystem,
+    getLastTaskInfo,
+    getTaskInfo,
 };

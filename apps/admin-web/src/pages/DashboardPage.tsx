@@ -23,7 +23,7 @@ type QrCheckReply = {
 /**
  * 渲染用于标题前缀的轻量 SVG 图标。
  */
-function Icon(props: { name: "pulse" | "logs" | "bolt" | "leaf" | "qr" }): React.JSX.Element {
+function Icon(props: { name: "pulse" | "logs" | "bolt" | "leaf" | "qr" | "task" }): React.JSX.Element {
   const common = { className: "miniIcon", viewBox: "0 0 24 24", fill: "none", xmlns: "http://www.w3.org/2000/svg" };
   if (props.name === "logs") {
     return (
@@ -64,6 +64,26 @@ function Icon(props: { name: "pulse" | "logs" | "bolt" | "leaf" | "qr" }): React
         <path
           d="M4 4h6v6H4V4Zm0 10h6v6H4v-6Zm10-10h6v6h-6V4Zm1 1v4h4V5h-4Zm-10 1v4h4V6H5Zm0 10v4h4v-4H5Zm10 2h2v2h-2v-2Zm4 0h2v2h-2v-2Zm-4-4h6v2h-6v-2Zm0 6h2v2h-2v-2Zm4-6h2v4h-2v-4Z"
           fill="currentColor"
+        />
+      </svg>
+    );
+  }
+  if (props.name === "task") {
+    return (
+      <svg {...common}>
+        <path
+          d="M9 11l3 3L22 4"
+          stroke="currentColor"
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+        <path
+          d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"
+          stroke="currentColor"
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
         />
       </svg>
     );
@@ -914,6 +934,92 @@ export function DashboardPage(): React.JSX.Element {
             </GlassCard>
           </div>
 
+          <div className="gridSpan2">
+            <GlassCard
+              title={
+                <span className="titleWithIcon">
+                  <Icon name="task" />
+                  <span>任务列表</span>
+                </span>
+              }
+              subtitle={
+                snapshot?.bot?.tasks?.items?.length 
+                  ? `${snapshot.bot.tasks.items.length} 个任务 · 更新于 ${formatDateTime(new Date(snapshot.bot.tasks.updatedAt).toISOString())}`
+                  : snapshot?.bot?.tasks 
+                    ? `暂无任务 · 更新于 ${formatDateTime(new Date(snapshot.bot.tasks.updatedAt).toISOString())}`
+                    : "等待任务数据..."
+              }
+              className="compactCard"
+            >
+              <div className="table tableCompact tableScrollable">
+                <div className="thead">
+                  <div>任务</div>
+                  <div>进度</div>
+                  <div>状态</div>
+                </div>
+                {snapshot?.bot?.tasks?.items?.length ? (
+                  snapshot.bot.tasks.items
+                    .sort((a, b) => {
+                      const aDone = a.isClaimed || a.progress >= a.totalProgress;
+                      const bDone = b.isClaimed || b.progress >= b.totalProgress;
+                      if (aDone !== bDone) return aDone ? 1 : -1;
+                      if (a.isClaimed !== b.isClaimed) return a.isClaimed ? 1 : -1;
+                      return a.id - b.id;
+                    })
+                    .map((task) => {
+                      const progress = task.totalProgress > 0 ? Math.min(100, (task.progress / task.totalProgress) * 100) : 0;
+                      const isComplete = task.progress >= task.totalProgress;
+                      const statusText = task.isClaimed ? "已领取" : isComplete ? "可领取" : "进行中";
+                      const statusColor = task.isClaimed ? "text-gray-400" : isComplete ? "text-green-400" : "text-blue-400";
+
+                      return (
+                        <div className="trow" key={task.id}>
+                          <div style={{ minWidth: 0, maxWidth: "60%" }}>
+                            <div className="mono" style={{ whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                              {task.desc}
+                            </div>
+                            {task.rewards?.length > 0 && (
+                              <div style={{ marginTop: "2px", fontSize: "10px", opacity: 0.7 }}>
+                                奖励: {task.rewards.map((r) => `${r.name || r.id}x${r.count}`).join(" ")}
+                              </div>
+                            )}
+                          </div>
+                          <div style={{ width: "120px" }}>
+                            <div style={{ display: "flex", flexDirection: "column", gap: "2px" }}>
+                              <div style={{ height: "6px", borderRadius: "3px", background: "rgba(255,255,255,0.08)", overflow: "hidden" }}>
+                                <div
+                                  style={{
+                                    height: "100%",
+                                    borderRadius: "3px",
+                                    width: `${progress}%`,
+                                    background: isComplete ? "rgba(111, 255, 184, 0.8)" : "rgba(96, 165, 250, 0.8)",
+                                  }}
+                                />
+                              </div>
+                              <span className="muted" style={{ fontSize: "10px" }}>
+                                {task.progress}/{task.totalProgress}
+                              </span>
+                            </div>
+                          </div>
+                          <div style={{ textAlign: "right" }}>
+                            <span className={statusColor} style={{ fontWeight: 500 }}>
+                              {statusText}
+                            </span>
+                          </div>
+                        </div>
+                      );
+                    })
+                ) : (
+                  <div className="trow">
+                    <div className="muted">暂无</div>
+                    <div className="muted">—</div>
+                    <div className="muted">等待任务数据</div>
+                  </div>
+                )}
+              </div>
+            </GlassCard>
+          </div>
+
           <div>
             <GlassCard
               title={
@@ -926,7 +1032,7 @@ export function DashboardPage(): React.JSX.Element {
               right={<span className="chip">累计</span>}
               className="compactCard"
             >
-              <div className="table">
+              <div className="table tableScrollable">
                 <div className="thead">
                   <div>操作</div>
                   <div>次数</div>
@@ -1019,7 +1125,7 @@ export function DashboardPage(): React.JSX.Element {
               subtitle="按收获/偷菜累计（从日志解析）"
               className="compactCard"
             >
-              <div className="table cropTable tableCompact">
+              <div className="table cropTable tableScrollable">
                 <div className="thead">
                   <div>作物</div>
                   <div>数量</div>

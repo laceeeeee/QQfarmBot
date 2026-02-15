@@ -484,6 +484,71 @@ export class BotController {
         const unlockedCount = items.filter((x) => x.unlocked).length;
         return { updatedAt: Date.now(), total: items.length, unlocked: unlockedCount, items };
     }
+    updateTaskViews(taskMod) {
+        if (!this.status.running)
+            return;
+        try {
+            const toNum = taskMod.toNum || ((v) => (typeof v === "number" ? v : Number(v) || 0));
+            const taskInfo = taskMod.getLastTaskInfo();
+            if (!taskInfo) {
+                this.status.tasks = { updatedAt: Date.now(), items: [] };
+                return;
+            }
+            const info = taskInfo;
+            const dailyTasks = info.daily_tasks || [];
+            const growthTasks = info.growth_tasks || [];
+            const otherTasks = info.tasks || [];
+            const rawTasks = [...dailyTasks, ...growthTasks, ...otherTasks];
+            const index = this.getBagIndex();
+            const getItemName = (itemId) => {
+                if (index.goodsNameById.has(itemId)) {
+                    return index.goodsNameById.get(itemId);
+                }
+                if (index.seedNameBySeedId.has(itemId)) {
+                    return index.seedNameBySeedId.get(itemId);
+                }
+                if (index.fruitByFruitId.has(itemId)) {
+                    return index.fruitByFruitId.get(itemId).name;
+                }
+                return `物品${itemId}`;
+            };
+            const seenIds = new Set();
+            const items = rawTasks
+                .map((t) => {
+                const task = t;
+                const idNum = toNum(task.id);
+                if (!Number.isFinite(idNum))
+                    return null;
+                if (seenIds.has(idNum))
+                    return null;
+                seenIds.add(idNum);
+                const rewards = (task.rewards || []).map((r) => {
+                    const rewardId = toNum(r.id);
+                    return {
+                        id: rewardId,
+                        count: toNum(r.count),
+                        name: getItemName(rewardId),
+                    };
+                });
+                return {
+                    id: idNum,
+                    desc: String(task.desc || `任务#${idNum}`),
+                    progress: toNum(task.progress),
+                    totalProgress: toNum(task.total_progress),
+                    isClaimed: Boolean(task.is_claimed),
+                    isUnlocked: Boolean(task.is_unlocked) !== false,
+                    shareMultiple: toNum(task.share_multiple),
+                    rewards,
+                    taskType: toNum(task.task_type),
+                };
+            })
+                .filter((x) => x != null);
+            this.status.tasks = { updatedAt: Date.now(), items };
+        }
+        catch (e) {
+            this.status.tasks = { updatedAt: Date.now(), items: [] };
+        }
+    }
     async start(input) {
         await this.runExclusive(async () => {
             await this.startInternal(input);
@@ -546,6 +611,7 @@ export class BotController {
             farmSummary: null,
             bag: null,
             visits: { updatedAt: Date.now(), items: [] },
+            tasks: { updatedAt: Date.now(), items: [] },
         };
         utilsMod.botEvents.removeAllListeners?.("log");
         utilsMod.botEvents.removeAllListeners?.("visit");
@@ -595,6 +661,16 @@ export class BotController {
             if (this.friendFarmEnabled)
                 friendMod.startFriendCheckLoop();
             taskMod.initTaskSystem();
+            // 立即获取任务信息
+            setTimeout(async () => {
+                try {
+                    if (taskMod.getTaskInfo) {
+                        await taskMod.getTaskInfo();
+                        this.updateTaskViews({ ...taskMod, toNum: utilsMod.toNum });
+                    }
+                }
+                catch { }
+            }, 2000);
             setTimeout(() => warehouseMod.debugSellFruits(), 3000);
             warehouseMod.startSellLoop(60_000);
             let lastGold = Number(user.gold ?? 0);
@@ -607,6 +683,7 @@ export class BotController {
                     expProgress: expProgress ?? undefined,
                 };
                 this.updateFarmViews({ farmMod, utilsMod });
+                this.updateTaskViews({ ...taskMod, toNum: utilsMod.toNum });
                 const gold = Number(next.gold ?? 0);
                 const exp = Number(next.exp ?? 0);
                 const goldDelta = gold - lastGold;
