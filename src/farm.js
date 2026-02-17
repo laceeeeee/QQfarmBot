@@ -191,6 +191,32 @@ async function removePlant(landIds) {
     return types.RemovePlantReply.decode(replyBody);
 }
 
+async function unlockLand(landIds) {
+    let results = [];
+    for (const landId of landIds) {
+        const body = types.UnlockLandRequest.encode(types.UnlockLandRequest.create({
+            land_ids: [toLong(landId)],
+        })).finish();
+        const { body: replyBody } = await sendMsgAsync('gamepb.plantpb.PlantService', 'UnlockLand', body);
+        results.push(types.UnlockLandReply.decode(replyBody));
+        await sleep(200);
+    }
+    return results;
+}
+
+async function upgradeLand(landIds) {
+    let results = [];
+    for (const landId of landIds) {
+        const body = types.UpgradeLandRequest.encode(types.UpgradeLandRequest.create({
+            land_ids: [toLong(landId)],
+        })).finish();
+        const { body: replyBody } = await sendMsgAsync('gamepb.plantpb.PlantService', 'UpgradeLand', body);
+        results.push(types.UpgradeLandReply.decode(replyBody));
+        await sleep(200);
+    }
+    return results;
+}
+
 // ============ 商店 API ============
 
 async function getShopInfo(shopId) {
@@ -665,6 +691,48 @@ async function checkFarm() {
         const lands = landsReply.lands;
         const status = analyzeLands(lands);
         const unlockedLandCount = lands.filter(land => land && land.unlocked).length;
+
+        // 自动开拓新土地
+        if (CONFIG.autoExpandLand) {
+            const unlockableLands = lands.filter(land => land && !land.unlocked && land.could_unlock).map(land => toNum(land.id));
+            if (unlockableLands.length > 0) {
+                try {
+                    await unlockLand(unlockableLands);
+                    unlockableLands.forEach(landId => {
+                        botEvents.emit('visit', {
+                            direction: 'outgoing',
+                            gid: state.gid,
+                            name: '自己',
+                            ts: new Date().toISOString(),
+                            kind: 'expand',
+                            message: `开拓新土地 (地块#${landId})`,
+                        });
+                    });
+                    actions.push(`开拓${unlockableLands.length}`);
+                } catch (e) { logWarn('开拓土地', e.message); }
+            }
+        }
+
+        // 自动升级红土
+        if (CONFIG.autoUpgradeRedLand) {
+            const upgradeableLands = lands.filter(land => land && land.unlocked && land.could_upgrade).map(land => toNum(land.id));
+            if (upgradeableLands.length > 0) {
+                try {
+                    await upgradeLand(upgradeableLands);
+                    upgradeableLands.forEach(landId => {
+                        botEvents.emit('visit', {
+                            direction: 'outgoing',
+                            gid: state.gid,
+                            name: '自己',
+                            ts: new Date().toISOString(),
+                            kind: 'upgrade',
+                            message: `升级红土 (地块#${landId})`,
+                        });
+                    });
+                    actions.push(`升级${upgradeableLands.length}`);
+                } catch (e) { logWarn('升级土地', e.message); }
+            }
+        }
         isFirstFarmCheck = false;
         lastFarmSummary = {
             updatedAt: Date.now(),

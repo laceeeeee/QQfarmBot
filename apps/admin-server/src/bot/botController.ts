@@ -373,6 +373,8 @@ export class BotController {
       autoFriendFarm: true,
       autoTask: true,
       autoSell: true,
+      autoExpandLand: false,
+      autoUpgradeRedLand: false,
     };
     const farming = config.farming ?? { forceLowestLevelCrop: false, forceLatestLevelCrop: false };
     try {
@@ -388,6 +390,8 @@ export class BotController {
       botConfig.autoPlant = automation.autoPlant;
       botConfig.autoTask = automation.autoTask;
       botConfig.autoSell = automation.autoSell;
+      botConfig.autoExpandLand = automation.autoExpandLand;
+      botConfig.autoUpgradeRedLand = automation.autoUpgradeRedLand;
       botConfig.forceLowestLevelCrop = farming.forceLowestLevelCrop;
       botConfig.forceLatestLevelCrop = Boolean(farming.forceLatestLevelCrop);
       botConfig.disableAutoRecommend = Boolean(farming.disableAutoRecommend);
@@ -549,6 +553,10 @@ export class BotController {
         const land = raw as {
           id?: unknown;
           unlocked?: boolean;
+          level?: unknown;
+          max_level?: unknown;
+          could_unlock?: boolean;
+          could_upgrade?: boolean;
           plant?: {
             name?: string;
             dry_num?: unknown;
@@ -559,6 +567,10 @@ export class BotController {
         };
         const idNum = Number(land?.id ?? 0);
         const unlocked = Boolean(land?.unlocked);
+        const landLevel = Number(land?.level ?? 0);
+        const landMaxLevel = Number(land?.max_level ?? 0);
+        const couldUnlock = Boolean(land?.could_unlock);
+        const couldUpgrade = Boolean(land?.could_upgrade);
 
         const plant = land?.plant;
         const hasPhases = Array.isArray(plant?.phases) && plant!.phases!.length > 0;
@@ -574,6 +586,10 @@ export class BotController {
             needWater: false,
             needWeed: false,
             needBug: false,
+            landLevel,
+            landMaxLevel,
+            couldUnlock,
+            couldUpgrade,
           };
         }
 
@@ -589,6 +605,10 @@ export class BotController {
             needWater: false,
             needWeed: false,
             needBug: false,
+            landLevel,
+            landMaxLevel,
+            couldUnlock,
+            couldUpgrade,
           };
         }
 
@@ -653,6 +673,10 @@ export class BotController {
           needWater,
           needWeed,
           needBug,
+          landLevel,
+          landMaxLevel,
+          couldUnlock,
+          couldUpgrade,
         };
       })
       .filter((x) => Number.isFinite(x.id))
@@ -684,7 +708,16 @@ export class BotController {
 
       const index = this.getBagIndex();
 
+      const commonItemNames: Record<number, string> = {
+        1001: "金币",
+        1002: "点券",
+        1101: "经验值",
+      };
+
       const getItemName = (itemId: number): string => {
+        if (commonItemNames[itemId]) {
+          return commonItemNames[itemId];
+        }
         if (index.goodsNameById.has(itemId)) {
           return index.goodsNameById.get(itemId)!;
         }

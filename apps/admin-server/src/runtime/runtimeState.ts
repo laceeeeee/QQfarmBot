@@ -14,6 +14,8 @@ export type RuntimeConfig = {
     autoFriendFarm: boolean;
     autoTask: boolean;
     autoSell: boolean;
+    autoExpandLand: boolean;
+    autoUpgradeRedLand: boolean;
   };
   farming?: {
     forceLowestLevelCrop: boolean;

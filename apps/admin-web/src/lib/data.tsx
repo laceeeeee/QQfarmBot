@@ -29,6 +29,8 @@ export type Snapshot = {
       autoFriendFarm: boolean;
       autoTask: boolean;
       autoSell: boolean;
+      autoExpandLand: boolean;
+      autoUpgradeRedLand: boolean;
     };
     farming?: {
       forceLowestLevelCrop: boolean;
@@ -103,6 +105,10 @@ export type Snapshot = {
         needWater: boolean;
         needWeed: boolean;
         needBug: boolean;
+        landLevel?: number;
+        landMaxLevel?: number;
+        couldUnlock?: boolean;
+        couldUpgrade?: boolean;
       }>;
     } | null;
     bag?: {
@@ -123,7 +129,7 @@ export type Snapshot = {
         direction: "incoming" | "outgoing";
         gid: number;
         name: string | null;
-        kind: "visit" | "steal" | "weed" | "bug" | "water";
+        kind: "visit" | "steal" | "weed" | "bug" | "water" | "expand" | "upgrade";
         message: string;
       }>;
     } | null;

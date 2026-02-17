@@ -5,17 +5,20 @@ import { formatDateTime } from "../lib/format";
 import { GlassCard } from "../ui/GlassCard";
 
 type DirFilter = "all" | "incoming" | "outgoing";
-type KindFilter = "all" | "visit" | "steal" | "weed" | "bug" | "water";
+type KindFilter = "all" | "visit" | "steal" | "weed" | "bug" | "water" | "expand" | "upgrade";
 
 /**
  * 将到访类型转换为更直观的中文标签。
  */
-function formatKind(kind: "visit" | "steal" | "weed" | "bug" | "water"): string {
+function formatKind(kind: "visit" | "steal" | "weed" | "bug" | "water" | "expand" | "upgrade"): string {
   if (kind === "visit") return "巡访";
   if (kind === "steal") return "偷菜";
   if (kind === "weed") return "放草";
   if (kind === "bug") return "放虫";
-  return "浇水";
+  if (kind === "water") return "浇水";
+  if (kind === "expand") return "开拓";
+  if (kind === "upgrade") return "升级";
+  return kind;
 }
 
 /**
@@ -115,6 +118,8 @@ export function VisitsPage(): React.JSX.Element {
                 <option value="weed">放草</option>
                 <option value="bug">放虫</option>
                 <option value="water">浇水</option>
+                <option value="expand">开拓</option>
+                <option value="upgrade">升级</option>
               </select>
             </div>
           </div>

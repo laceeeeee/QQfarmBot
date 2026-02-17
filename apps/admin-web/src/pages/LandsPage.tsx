@@ -25,6 +25,8 @@ type Config = {
     autoFriendFarm: boolean;
     autoTask: boolean;
     autoSell: boolean;
+    autoExpandLand: boolean;
+    autoUpgradeRedLand: boolean;
   };
   farming?: {
     forceLowestLevelCrop: boolean;
@@ -112,6 +114,8 @@ export function LandsPage(): React.JSX.Element {
     autoFriendFarm: true,
     autoTask: true,
     autoSell: true,
+    autoExpandLand: false,
+    autoUpgradeRedLand: false,
   };
   const effectiveFarming = (snapshot?.config?.farming ?? loadedConfig?.farming ?? { forceLowestLevelCrop: false, forceLatestLevelCrop: false, disableAutoRecommend: false }) as Farming;
 
@@ -124,6 +128,8 @@ export function LandsPage(): React.JSX.Element {
   const [autoFriendFarm, setAutoFriendFarm] = useState(Boolean(effectiveAutomation.autoFriendFarm));
   const [autoTask, setAutoTask] = useState(Boolean(effectiveAutomation.autoTask));
   const [autoSell, setAutoSell] = useState(Boolean(effectiveAutomation.autoSell));
+  const [autoExpandLand, setAutoExpandLand] = useState(Boolean(effectiveAutomation.autoExpandLand));
+  const [autoUpgradeRedLand, setAutoUpgradeRedLand] = useState(Boolean(effectiveAutomation.autoUpgradeRedLand));
 
   const [forceLowestLevelCrop, setForceLowestLevelCrop] = useState(Boolean(effectiveFarming.forceLowestLevelCrop));
   const [forceLatestLevelCrop, setForceLatestLevelCrop] = useState(Boolean(effectiveFarming.forceLatestLevelCrop));
@@ -150,6 +156,8 @@ export function LandsPage(): React.JSX.Element {
         autoFriendFarm,
         autoTask,
         autoSell,
+        autoExpandLand,
+        autoUpgradeRedLand,
         ...(overrides?.automation ?? {}),
       };
 
@@ -180,6 +188,8 @@ export function LandsPage(): React.JSX.Element {
       autoTask,
       autoWater,
       autoWeed,
+      autoExpandLand,
+      autoUpgradeRedLand,
       fixedSeedId,
       forceLowestLevelCrop,
       forceLatestLevelCrop,
@@ -231,6 +241,8 @@ export function LandsPage(): React.JSX.Element {
           autoFriendFarm: true,
           autoTask: true,
           autoSell: true,
+          autoExpandLand: false,
+          autoUpgradeRedLand: false,
         };
         const f = res.config.farming ?? { forceLowestLevelCrop: false, forceLatestLevelCrop: false, disableAutoRecommend: false };
         setAutoHarvest(Boolean(a.autoHarvest));
@@ -242,6 +254,8 @@ export function LandsPage(): React.JSX.Element {
         setAutoFriendFarm(Boolean(a.autoFriendFarm));
         setAutoTask(Boolean(a.autoTask));
         setAutoSell(Boolean(a.autoSell));
+        setAutoExpandLand(Boolean(a.autoExpandLand));
+        setAutoUpgradeRedLand(Boolean(a.autoUpgradeRedLand));
         setForceLowestLevelCrop(Boolean(f.forceLowestLevelCrop));
         setForceLatestLevelCrop(Boolean(f.forceLatestLevelCrop));
         setDisableAutoRecommend(Boolean(f.disableAutoRecommend));
@@ -292,6 +306,8 @@ export function LandsPage(): React.JSX.Element {
         autoFriendFarm: true,
         autoTask: true,
         autoSell: true,
+        autoExpandLand: false,
+        autoUpgradeRedLand: false,
       };
       const f = res.config.farming ?? { forceLowestLevelCrop: false, forceLatestLevelCrop: false, disableAutoRecommend: false };
       setAutoHarvest(Boolean(a.autoHarvest));
@@ -303,6 +319,8 @@ export function LandsPage(): React.JSX.Element {
       setAutoFriendFarm(Boolean(a.autoFriendFarm));
       setAutoTask(Boolean(a.autoTask));
       setAutoSell(Boolean(a.autoSell));
+      setAutoExpandLand(Boolean(a.autoExpandLand));
+      setAutoUpgradeRedLand(Boolean(a.autoUpgradeRedLand));
       setForceLowestLevelCrop(Boolean(f.forceLowestLevelCrop));
       setForceLatestLevelCrop(Boolean(f.forceLatestLevelCrop));
       setDisableAutoRecommend(Boolean(f.disableAutoRecommend));
@@ -364,6 +382,8 @@ export function LandsPage(): React.JSX.Element {
     setAutoFriendFarm(Boolean(a.autoFriendFarm));
     setAutoTask(Boolean(a.autoTask));
     setAutoSell(Boolean(a.autoSell));
+    setAutoExpandLand(Boolean(a.autoExpandLand));
+    setAutoUpgradeRedLand(Boolean(a.autoUpgradeRedLand));
   }, [dirty, loadedConfig, saving, snapshot?.config?.automation]);
 
   useEffect(() => {
@@ -767,6 +787,32 @@ export function LandsPage(): React.JSX.Element {
                   setAutoSell(next);
                   setDirty(true);
                   void saveWithOverrides({ automation: { autoSell: next } });
+                }}
+              />
+            </label>
+            <label className="switchRow">
+              <span className="switchLabel">自动开拓新土地</span>
+              <input
+                type="checkbox"
+                checked={autoExpandLand}
+                onChange={(e) => {
+                  const next = e.target.checked;
+                  setAutoExpandLand(next);
+                  setDirty(true);
+                  void saveWithOverrides({ automation: { autoExpandLand: next } });
+                }}
+              />
+            </label>
+            <label className="switchRow">
+              <span className="switchLabel">自动升级红土</span>
+              <input
+                type="checkbox"
+                checked={autoUpgradeRedLand}
+                onChange={(e) => {
+                  const next = e.target.checked;
+                  setAutoUpgradeRedLand(next);
+                  setDirty(true);
+                  void saveWithOverrides({ automation: { autoUpgradeRedLand: next } });
                 }}
               />
             </label>

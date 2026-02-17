@@ -951,8 +951,8 @@ export function DashboardPage(): React.JSX.Element {
               }
               className="compactCard"
             >
-              <div className="table tableCompact tableScrollable">
-                <div className="thead">
+              <div className="table tableCompact tableScrollable" style={{ display: "grid", gap: "8px" }}>
+                <div className="thead" style={{ display: "none" }}>
                   <div>任务</div>
                   <div>进度</div>
                   <div>状态</div>
@@ -973,47 +973,75 @@ export function DashboardPage(): React.JSX.Element {
                       const statusColor = task.isClaimed ? "text-gray-400" : isComplete ? "text-green-400" : "text-blue-400";
 
                       return (
-                        <div className="trow" key={task.id}>
-                          <div style={{ minWidth: 0, maxWidth: "60%" }}>
-                            <div className="mono" style={{ whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
-                              {task.desc}
+                        <div 
+                          key={task.id}
+                          style={{
+                            display: "flex",
+                            flexDirection: "column",
+                            gap: "8px",
+                            padding: "12px",
+                            background: "rgba(255, 255, 255, 0.03)",
+                            borderRadius: "8px",
+                          }}
+                        >
+                          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: "12px" }}>
+                            <div style={{ minWidth: 0, flex: 1 }}>
+                              <div 
+                                className="mono" 
+                                style={{ 
+                                  fontSize: "14px",
+                                  lineHeight: 1.4,
+                                  whiteSpace: "normal",
+                                  wordBreak: "break-word",
+                                }}
+                              >
+                                {task.desc}
+                              </div>
+                              {task.rewards?.length > 0 && (
+                                <div style={{ marginTop: "6px", fontSize: "12px", opacity: 0.7 }}>
+                                  奖励: {task.rewards.map((r) => `${r.name || r.id}x${r.count}`).join(" ")}
+                                </div>
+                              )}
                             </div>
-                            {task.rewards?.length > 0 && (
-                              <div style={{ marginTop: "2px", fontSize: "10px", opacity: 0.7 }}>
-                                奖励: {task.rewards.map((r) => `${r.name || r.id}x${r.count}`).join(" ")}
-                              </div>
-                            )}
-                          </div>
-                          <div style={{ width: "120px" }}>
-                            <div style={{ display: "flex", flexDirection: "column", gap: "2px" }}>
-                              <div style={{ height: "6px", borderRadius: "3px", background: "rgba(255,255,255,0.08)", overflow: "hidden" }}>
-                                <div
-                                  style={{
-                                    height: "100%",
-                                    borderRadius: "3px",
-                                    width: `${progress}%`,
-                                    background: isComplete ? "rgba(111, 255, 184, 0.8)" : "rgba(96, 165, 250, 0.8)",
-                                  }}
-                                />
-                              </div>
-                              <span className="muted" style={{ fontSize: "10px" }}>
-                                {task.progress}/{task.totalProgress}
+                            <div style={{ textAlign: "right", flexShrink: 0 }}>
+                              <span className={statusColor} style={{ fontWeight: 500, fontSize: "13px" }}>
+                                {statusText}
                               </span>
                             </div>
                           </div>
-                          <div style={{ textAlign: "right" }}>
-                            <span className={statusColor} style={{ fontWeight: 500 }}>
-                              {statusText}
-                            </span>
+                          <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
+                            <div style={{ height: "8px", borderRadius: "4px", background: "rgba(255,255,255,0.08)", overflow: "hidden" }}>
+                              <div
+                                style={{
+                                  height: "100%",
+                                  borderRadius: "4px",
+                                  width: `${progress}%`,
+                                  background: isComplete ? "rgba(111, 255, 184, 0.8)" : "rgba(96, 165, 250, 0.8)",
+                                  transition: "width 0.3s ease",
+                                }}
+                              />
+                            </div>
+                            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                              <span className="muted" style={{ fontSize: "11px" }}>
+                                进度: {task.progress}/{task.totalProgress}
+                              </span>
+                              <span className="muted" style={{ fontSize: "11px" }}>
+                                {Math.round(progress)}%
+                              </span>
+                            </div>
                           </div>
                         </div>
                       );
                     })
                 ) : (
-                  <div className="trow">
-                    <div className="muted">暂无</div>
-                    <div className="muted">—</div>
-                    <div className="muted">等待任务数据</div>
+                  <div 
+                    style={{
+                      padding: "24px",
+                      textAlign: "center",
+                      color: "rgba(255, 255, 255, 0.5)",
+                    }}
+                  >
+                    暂无任务数据
                   </div>
                 )}
               </div>

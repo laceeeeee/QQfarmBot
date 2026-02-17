@@ -407,8 +407,11 @@ async function visitFriend(friend, totalActions, myGid) {
         console.log(`========== 调试结束 ==========\n`);
     }
 
+    // 记录本次访问的具体操作
+    const friendActions = { weed: 0, bug: 0, water: 0, steal: 0, putBug: 0, putWeed: 0 };
+    const stolenPlantNames = [];
+
     // 执行操作
-    const actions = [];
 
     // 帮助操作: 只在有经验时执行 (如果启用了 HELP_ONLY_WITH_EXP)
     if (status.needWeed.length > 0) {
@@ -420,7 +423,11 @@ async function visitFriend(friend, totalActions, myGid) {
                 try { await helpWeed(gid, [landId]); ok++; } catch (e) { /* ignore */ }
                 await sleep(100);
             }
-            if (ok > 0) { actions.push(`草${ok}`); totalActions.weed += ok; }
+            if (ok > 0) {
+                log('好友', `帮【${name}】除草${ok}次`);
+                totalActions.weed += ok;
+                friendActions.weed = ok;
+            }
         }
     }
 
@@ -433,7 +440,11 @@ async function visitFriend(friend, totalActions, myGid) {
                 try { await helpInsecticide(gid, [landId]); ok++; } catch (e) { /* ignore */ }
                 await sleep(100);
             }
-            if (ok > 0) { actions.push(`虫${ok}`); totalActions.bug += ok; }
+            if (ok > 0) {
+                log('好友', `帮【${name}】杀虫${ok}次`);
+                totalActions.bug += ok;
+                friendActions.bug = ok;
+            }
         }
     }
 
@@ -446,7 +457,11 @@ async function visitFriend(friend, totalActions, myGid) {
                 try { await helpWater(gid, [landId]); ok++; } catch (e) { /* ignore */ }
                 await sleep(100);
             }
-            if (ok > 0) { actions.push(`水${ok}`); totalActions.water += ok; }
+            if (ok > 0) {
+                log('好友', `帮【${name}】浇水${ok}次`);
+                totalActions.water += ok;
+                friendActions.water = ok;
+            }
         }
     }
 
@@ -467,8 +482,10 @@ async function visitFriend(friend, totalActions, myGid) {
         }
         if (ok > 0) {
             const plantNames = formatNameCounts(stolenPlants);
-            actions.push(`偷${ok}${plantNames ? '(' + plantNames + ')' : ''}`);
+            log('好友', `偷【${name}】的菜: ${plantNames || ok}个`);
             totalActions.steal += ok;
+            friendActions.steal = ok;
+            stolenPlantNames.push(...stolenPlants);
         }
     }
 
@@ -482,7 +499,11 @@ async function visitFriend(friend, totalActions, myGid) {
             try { await putInsects(gid, [landId]); ok++; } catch (e) { /* ignore */ }
             await sleep(100);
         }
-        if (ok > 0) { actions.push(`放虫${ok}`); totalActions.putBug += ok; }
+        if (ok > 0) {
+            log('好友', `给【${name}】放虫${ok}次`);
+            totalActions.putBug += ok;
+            friendActions.putBug = ok;
+        }
     }
 
     if (ENABLE_PUT_BAD_THINGS && status.canPutWeed.length > 0 && canOperate(10003)) {
@@ -494,19 +515,31 @@ async function visitFriend(friend, totalActions, myGid) {
             try { await putWeeds(gid, [landId]); ok++; } catch (e) { /* ignore */ }
             await sleep(100);
         }
-        if (ok > 0) { actions.push(`放草${ok}`); totalActions.putWeed += ok; }
+        if (ok > 0) {
+            log('好友', `给【${name}】种草${ok}次`);
+            totalActions.putWeed += ok;
+            friendActions.putWeed = ok;
+        }
     }
-
-    if (actions.length > 0) {
-        log('好友', `${name}: ${actions.join('/')}`);
+    
+    const visitActions = [];
+    if (friendActions.weed > 0) visitActions.push(`除草${friendActions.weed}`);
+    if (friendActions.bug > 0) visitActions.push(`杀虫${friendActions.bug}`);
+    if (friendActions.water > 0) visitActions.push(`浇水${friendActions.water}`);
+    if (friendActions.steal > 0) {
+        const plantNames = formatNameCounts(stolenPlantNames);
+        visitActions.push(`偷菜${friendActions.steal}${plantNames ? `(${plantNames})` : ''}`);
     }
+    if (friendActions.putBug > 0) visitActions.push(`放虫${friendActions.putBug}`);
+    if (friendActions.putWeed > 0) visitActions.push(`种草${friendActions.putWeed}`);
+    
     botEvents.emit('visit', {
         direction: 'outgoing',
         gid,
         name,
         ts: new Date().toISOString(),
         kind: 'visit',
-        message: actions.length > 0 ? actions.join('/') : '无操作',
+        message: visitActions.length > 0 ? visitActions.join(' / ') : '无操作',
     });
 
     await leaveFriendFarm(gid);

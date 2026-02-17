@@ -95,8 +95,11 @@ function getRewardSummary(items) {
     for (const item of items) {
         const id = toNum(item.id);
         const count = toNum(item.count);
-        // 常见物品ID: 1=金币, 2=经验
-        if (id === 1) summary.push(`金币${count}`);
+        // 常见物品ID: 1001=金币, 1002=点券, 1101=经验值
+        if (id === 1001) summary.push(`金币${count}`);
+        else if (id === 1002) summary.push(`点券${count}`);
+        else if (id === 1101) summary.push(`经验值${count}`);
+        else if (id === 1) summary.push(`金币${count}`);
         else if (id === 2) summary.push(`经验${count}`);
         else summary.push(`物品#${id}x${count}`);
     }

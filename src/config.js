@@ -18,6 +18,8 @@ const CONFIG = {
     autoPlant: true,
     autoTask: true,
     autoSell: true,
+    autoExpandLand: false,      // 自动开拓新土地
+    autoUpgradeRedLand: false,    // 自动升级红土
     forceLowestLevelCrop: false,  // 开启后固定种最低等级作物（通常是白萝卜），跳过经验效率分析
     forceLatestLevelCrop: false,
     disableAutoRecommend: false,

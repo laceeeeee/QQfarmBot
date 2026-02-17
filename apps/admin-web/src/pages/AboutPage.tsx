@@ -9,7 +9,7 @@ export function AboutPage(): React.JSX.Element {
           <div className="aboutStack">
             <div className="aboutBlock">
               <div className="aboutH">版本</div>
-              <div className="aboutP mono">V1.9.0</div>
+              <div className="aboutP mono">V2.0.0</div>
             </div>
 
             <div className="aboutBlock">
